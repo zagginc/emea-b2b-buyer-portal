@@ -4,7 +4,7 @@ import { dispatchEvent } from '@/hooks/useB2BCallback';
 import { addNewLineToCart, createNewCart, getCart } from '@/shared/service/bc/graphql/cart';
 
 import { LineItem, StorefrontAPILineItem } from './b3Product/b3Product';
-import { getEcoTaxCustomFieldValues, getEcoTaxItemName } from '@/shared/service/bc/graphql/ecotax';
+import { EcoTaxCustomFieldProductResponse, getEcoTaxCustomFieldValues, getEcoTaxItemName } from '@/shared/service/bc/graphql/ecotax';
 import { useB3Lang } from '@/lib/lang';
 import { snackbar } from '@/utils/b3Tip';
 import { getStorefrontAPIUrl } from '@/shared/service/request/base';
@@ -191,7 +191,7 @@ export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPIL
   const _lineItems: StorefrontAPILineItem[] = [...lineItems];
 
   _lineItems.forEach((item) => productIds.push(item.product_id));
-  const ecoTaxCustomFieldResponse: any = await getEcoTaxCustomFieldValues(productIds);
+  const ecoTaxCustomFieldResponse: EcoTaxCustomFieldProductResponse[] = await getEcoTaxCustomFieldValues(productIds);
 
   if (!ecoTaxCustomFieldResponse || !ecoTaxCustomFieldResponse.length) {
     snackbar.error('failed');
@@ -215,7 +215,7 @@ export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPIL
 
       if (baseProductIndex !== null && baseProductData && baseProductName) {        
         _lineItems.splice(baseProductIndex + 1, 0, {
-          product_id: ecoTaxProductData.value,
+          product_id: parseInt(ecoTaxProductData.value),
           quantity: baseProductData?.quantity,
           name: getEcoTaxItemName(baseProductName)
         })

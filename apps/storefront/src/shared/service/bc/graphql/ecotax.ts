@@ -23,7 +23,7 @@ const ecoTaxCustomFieldValues = (productIds: number[]) => `query GetEcoTaxProduc
   }
 }`;
 
-export const getEcoTaxCustomFieldValues = async (productIds: number[]) => {
+export const getEcoTaxCustomFieldValues = async (productIds: number[]): Promise<EcoTaxCustomFieldProductResponse[]> => {
   const res = platform === 'bigcommerce' ? (
     await B3Request.graphqlBC({
       query: ecoTaxCustomFieldValues(productIds),
@@ -40,3 +40,25 @@ export const getEcoTaxCustomFieldValues = async (productIds: number[]) => {
 export const getEcoTaxItemName = (productName: string) => {
     return `Eco Participation - ${productName}`;
 };
+
+export interface EcoTaxCustomFieldProductResponse {
+  node: EcoTaxCustomFieldProductResponseNode;
+}
+
+export interface EcoTaxCustomFieldProductResponseNode {
+  customFields: EcoTaxCustomFieldProductResponseCustomFields;
+  entityId: number;
+  name: string;
+}
+
+export interface EcoTaxCustomFieldProductResponseCustomFields {
+  edges: EcoTaxCustomFieldProductResponseCustomFieldsEdge[];
+}
+
+export interface EcoTaxCustomFieldProductResponseCustomFieldsEdge {
+  node: EcoTaxCustomFieldProductResponseCustomFieldsEdgeNode;
+}
+export interface EcoTaxCustomFieldProductResponseCustomFieldsEdgeNode {
+  name: string;
+  value: string;
+}
