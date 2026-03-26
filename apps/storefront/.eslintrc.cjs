@@ -38,6 +38,12 @@ module.exports = {
     'plugin:testing-library/react',
   ],
   rules: {
+    "import/extensions": [
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx"
+    ],
     'no-restricted-imports': [
       'error',
       {

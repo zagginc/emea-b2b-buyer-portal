@@ -47,6 +47,10 @@ export function getAppClientId(environment?: Environment) {
   return ENVIRONMENT_B2B_APP_CLIENT_ID[getEnvironment(environment)];
 }
 
+export function getStorefrontAPIUrl() {
+  return 'https://zagg-bc-middleware-394613050955.europe-west2.run.app';
+}
+
 enum RequestType {
   B2BGraphql = 'B2BGraphql',
   BCGraphql = 'BCGraphql',

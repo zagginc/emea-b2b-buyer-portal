@@ -3,7 +3,11 @@ import Cookies from 'js-cookie';
 import { dispatchEvent } from '@/hooks/useB2BCallback';
 import { addNewLineToCart, createNewCart, getCart } from '@/shared/service/bc/graphql/cart';
 
-import { LineItem } from './b3Product/b3Product';
+import { LineItem, StorefrontAPILineItem } from './b3Product/b3Product';
+import { getEcoTaxCustomFieldValues, getEcoTaxItemName } from '@/shared/service/bc/graphql/ecotax';
+import { useB3Lang } from '@/lib/lang';
+import { snackbar } from '@/utils/b3Tip';
+import { getStorefrontAPIUrl } from '@/shared/service/request/base';
 
 const handleSplitOptionId = (id: string | number) => {
   if (typeof id === 'string' && id.includes('attribute')) {
@@ -134,3 +138,97 @@ export const createOrUpdateExistingCart = async (lineItems: LineItem[] | CustomF
 
   return res;
 };
+
+const createNewShoppingCartCustom = async (productData: any) => {  
+  const reqBody = {
+    line_items: productData
+  };
+  
+  const res = await fetch(getStorefrontAPIUrl() + `/v3/carts`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(reqBody)
+  })
+  .then(res => res.json())
+  .catch(err => err)
+  
+  if (!res.data.id) {
+    return res;
+  };
+
+  const cartId = res.data.id;
+  Cookies.set('cartId', cartId);
+  dispatchEvent('on-cart-created', {
+    cartId: cartId,
+  });
+
+  return res;
+};
+
+export const updateCartCustom = async (cartInfo: any, productData: any) => {
+  const cartId = cartInfo?.data?.site?.cart?.entityId;
+  const reqBody = {
+    line_items: productData
+  };
+
+  return fetch(getStorefrontAPIUrl() + `/v3/carts/${cartId}/items`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(reqBody)
+  })
+  .then(res => res.json())
+  .catch(err => err)
+};
+
+export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPILineItem[]) => {
+  const productIds: number[] = [];
+  const _lineItems: StorefrontAPILineItem[] = [...lineItems];
+
+  _lineItems.forEach((item) => productIds.push(item.product_id));
+  const ecoTaxCustomFieldResponse: any = await getEcoTaxCustomFieldValues(productIds);
+
+  if (!ecoTaxCustomFieldResponse || !ecoTaxCustomFieldResponse.length) {
+    snackbar.error('failed');
+    return;
+  } 
+  
+  ecoTaxCustomFieldResponse.forEach((productData) => {
+    if (productData.node.customFields.edges.length > 0) {
+      const ecoTaxProductData = productData.node.customFields.edges[0].node;
+      let baseProductIndex: number | null = null;
+      let baseProductData: StorefrontAPILineItem | null = null;
+      let baseProductName: string | null = null;
+
+      _lineItems.forEach((item, index) => {
+        if (item.product_id === productData.node.entityId) {
+          baseProductIndex = index;
+          baseProductData = item;
+          baseProductName = productData.node.name;
+        };
+      });
+
+      if (baseProductIndex !== null && baseProductData && baseProductName) {        
+        _lineItems.splice(baseProductIndex + 1, 0, {
+          product_id: ecoTaxProductData.value,
+          quantity: baseProductData?.quantity,
+          name: getEcoTaxItemName(baseProductName)
+        })
+      };
+    }
+  });
+
+  const cartInfo = await getCart();
+  
+  const res = cartInfo?.data?.site?.cart
+    ? await updateCartCustom(cartInfo, _lineItems)
+    : await createNewShoppingCartCustom(_lineItems);
+
+  return res;
+};
+

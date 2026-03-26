@@ -20,10 +20,11 @@ import b2bLogger from '@/utils/b3Logger';
 import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
 import { BigCommerceStorefrontAPIBaseURL } from '@/utils/basicConfig';
-import { createOrUpdateExistingCart } from '@/utils/cartUtils';
+import { createOrUpdateExistingCart, createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
 import { validateProductsLegacy as rawValidateProducts } from '@/utils/validateProducts';
 
 import { EditableProductItem, OrderProductItem } from '../../../types';
+import { StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
 import getReturnFormFields from '../shared/config';
 
 import CreateShoppingList from './CreateShoppingList';
@@ -233,19 +234,63 @@ export default function OrderDialog({
   };
 
   const handleReorderOnFrontend = async () => {
-    const items: CustomFieldItems[] = [];
+    // const items: CustomFieldItems[] = [];
+    // const skus: string[] = [];
+    // editableProducts.forEach((product) => {
+    //   if (checkedArr.includes(product.variant_id)) {
+    //     items.push({
+    //       quantity: parseInt(`${product.editQuantity}`, 10) || 1,
+    //       productId: product.product_id,
+    //       variantId: product.variant_id,
+    //       optionSelections: (product.product_options || []).map((option) => ({
+    //         optionId: option.product_option_id,
+    //         optionValue: option.value,
+    //       })),
+    //       allOptions: product.product_options,
+    //     });
+
+    //     skus.push(product.sku);
+    //   }
+    // });
+
+    // if (skus.length <= 0) {
+    //   return;
+    // }
+
+    // if (!validateProductNumber(variantInfoList, skus)) {
+    //   snackbar.error(b3Lang('purchasedProducts.error.fillCorrectQuantity'));
+    //   return;
+    // }
+
+    // // This will throw if there are errors, no need to check the response
+    // await createOrUpdateExistingCart(items);
+
+    // setOpen(false);
+    // snackbar.success(b3Lang('orderDetail.reorder.productsAdded'), {
+    //   action: {
+    //     label: b3Lang('orderDetail.viewCart'),
+    //     onClick: () => {
+    //       if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
+    //         window.location.href = CART_URL;
+    //       }
+    //     },
+    //   },
+    // });
+
+
+    // CUSTOM CODE BELOW
+    const items: StorefrontAPILineItem[] = [];
     const skus: string[] = [];
-    editableProducts.forEach((product) => {
+    editableProducts.forEach((product) => {        
       if (checkedArr.includes(product.variant_id)) {
         items.push({
           quantity: parseInt(`${product.editQuantity}`, 10) || 1,
-          productId: product.product_id,
-          variantId: product.variant_id,
-          optionSelections: (product.product_options || []).map((option) => ({
-            optionId: option.product_option_id,
-            optionValue: option.value,
-          })),
-          allOptions: product.product_options,
+          product_id: product.product_id,
+          variant_id: product.variant_id,
+          option_selections: (product.product_options || []).map((option) => ({
+            option_id: option.product_option_id,
+            option_value: parseInt(`${option.value}`, 10),
+          }))
         });
 
         skus.push(product.sku);
@@ -255,26 +300,33 @@ export default function OrderDialog({
     if (skus.length <= 0) {
       return;
     }
-
+    
     if (!validateProductNumber(variantInfoList, skus)) {
       snackbar.error(b3Lang('purchasedProducts.error.fillCorrectQuantity'));
       return;
     }
+    
+    const res = await createOrUpdateExistingCartCustom(items);
 
-    // This will throw if there are errors, no need to check the response
-    await createOrUpdateExistingCart(items);
-
-    setOpen(false);
-    snackbar.success(b3Lang('orderDetail.reorder.productsAdded'), {
-      action: {
-        label: b3Lang('orderDetail.viewCart'),
-        onClick: () => {
-          if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
-            window.location.href = CART_URL;
-          }
+    if (res.message) {
+      snackbar.error(res.message);
+      setIsRequestLoading(false);
+      return;
+    } else {
+      setIsRequestLoading(false);
+      setOpen(false);
+      snackbar.success(b3Lang('orderDetail.reorder.productsAdded'), {
+        action: {
+          label: b3Lang('orderDetail.viewCart'),
+          onClick: () => {
+            if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
+              window.location.href = CART_URL;
+            }
+          },
         },
-      },
-    });
+      });
+      b3TriggerCartNumber();
+    }
   };
 
   const handleReorderBackend = async () => {

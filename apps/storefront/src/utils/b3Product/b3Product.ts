@@ -60,6 +60,23 @@ export interface LineItem {
   variantEntityId?: number;
 }
 
+export interface StorefrontAPILineItem {
+  quantity: number;
+  product_id: number;
+  list_price?: number;
+  variant_id?: number;
+  name?: string;
+  option_selections?: StorefrontAPILineItemOption[];
+}
+export interface StorefrontAPILineItemOption {
+  option_id?: number;
+  option_value?: number;
+  name?: string;
+  value?: string;
+  nameId?: number;
+  valueId?: number;
+}
+
 const getDateValuesArray = (id: number, value: number) => {
   const data = new Date(value * 1000);
   const year = data.getFullYear();
