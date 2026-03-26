@@ -13,7 +13,7 @@ import { getVariantInfoBySkus } from '@/shared/service/b2b';
 import { useAppSelector } from '@/store';
 import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
-import { createOrUpdateExistingCart } from '@/utils/cartUtils';
+import { createOrUpdateExistingCart, createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
 import { ValidatedProductError, validateProductsLegacy } from '@/utils/validateProducts';
 
 import { SimpleObject } from '../../../types';
@@ -26,6 +26,7 @@ import {
   mergeValidatedWithCatalog,
   parseOptionList,
 } from './QuickAdd.validation';
+import { StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
 
 const INITIAL_NUM_ROWS = 3;
 
@@ -345,10 +346,23 @@ export default function QuickAdd() {
   };
 
   const addProductsToCart = async (products: CustomFieldItems[]) => {
-    const res = await createOrUpdateExistingCart(products);
+    // const res = await createOrUpdateExistingCart(products);
+    
+    // CUSTOM CODE
+    const atcProducts: StorefrontAPILineItem[] = products.map(product => ({
+      quantity: parseInt(`${product.quantity}`, 10) || 1,
+      product_id: product.productId,
+      variant_id: product.variantId,
+      option_selections: (product.newSelectOptionList || []).map((option: any) => ({
+        option_id: option.optionId,
+        option_value: parseInt(`${option.optionValue}`, 10),
+      }))
+    }));
 
-    if (res && res.errors) {
-      snackbar.error(res.errors[0].message);
+    const res = await createOrUpdateExistingCartCustom(atcProducts);
+    
+    if (res && res.message) {
+      snackbar.error(res.message);
     } else {
       snackbar.success(b3Lang('purchasedProducts.quickOrderPad.productsAdded'), {
         action: {

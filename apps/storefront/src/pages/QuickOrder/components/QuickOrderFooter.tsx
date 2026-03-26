@@ -26,12 +26,13 @@ import {
   addQuoteDraftProducts,
   calculateProductListPrice,
   getValidOptionsList,
+  StorefrontAPILineItem,
   validProductQty,
 } from '@/utils/b3Product/b3Product';
 import { conversionProductsList } from '@/utils/b3Product/shared/config';
 import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
-import { createOrUpdateExistingCart } from '@/utils/cartUtils';
+import { createOrUpdateExistingCart, createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
 import {
   convertStockAndThresholdValidationErrorToWarning,
   validateProductsLegacy,
@@ -169,8 +170,22 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
 
       const lineItems = await getProductsSearchInfo();
 
-      const res = await createOrUpdateExistingCart(lineItems);
+      // const res = await createOrUpdateExistingCart(lineItems);
 
+      // CUSTOM CODE
+      const atcLineItems: StorefrontAPILineItem[] = lineItems.map(product => ({
+        quantity: parseInt(`${product.quantity}`, 10) || 1,
+          product_id: product.productId,
+          variant_id: product.variantId,
+          option_selections: (product.optionSelections || []).map((option: any) => ({
+            option_id: option.optionId,
+            option_value: parseInt(`${option.optionValue}`, 10),
+          }))
+      }));
+
+      const res = await createOrUpdateExistingCartCustom(atcLineItems);
+      console.log('JC - res', res);
+      
       if (res && !res.errors) {
         showAddToCartSuccessMessage();
       } else if (res && res.errors) {
@@ -187,7 +202,21 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
   const handleBackendAddSelectedToCart = async () => {
     try {
       const lineItems = await getProductsSearchInfo();
-      await createOrUpdateExistingCart(lineItems);
+      // await createOrUpdateExistingCart(lineItems);
+
+      // CUSTOM CODE
+      const atcLineItems: StorefrontAPILineItem[] = lineItems.map(product => ({
+        quantity: parseInt(`${product.quantity}`, 10) || 1,
+          product_id: product.productId,
+          variant_id: product.variantId,
+          option_selections: (product.optionSelections || []).map((option: any) => ({
+            option_id: option.optionId,
+            option_value: parseInt(`${option.optionValue}`, 10),
+          }))
+      }));
+
+      await createOrUpdateExistingCartCustom(atcLineItems);
+
       showAddToCartSuccessMessage();
     } catch (e) {
       if (e instanceof Error) {

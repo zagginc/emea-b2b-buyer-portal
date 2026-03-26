@@ -15,13 +15,14 @@ import { useAppSelector } from '@/store';
 import b2bLogger from '@/utils/b3Logger';
 import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
-import { createOrUpdateExistingCart } from '@/utils/cartUtils';
+import { createOrUpdateExistingCart, createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
 
 import { addCartProductToVerify } from '../utils';
 
 import QuickAdd from './QuickAdd';
 import SearchProduct from './SearchProduct';
 import { ValidProductItem } from './ValidProduct';
+import { StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
 
 export default function QuickOrderPad() {
   const [isMobile] = useMobile();
@@ -57,10 +58,23 @@ export default function QuickOrderPad() {
   };
 
   const addSingleProductToCart = async (product: CustomFieldItems) => {
-    const res = await createOrUpdateExistingCart([product]);
+    // const res = await createOrUpdateExistingCart([product]);
+    
+    // CUSTOM CODE
+    const atcProduct: StorefrontAPILineItem = {
+      quantity: parseInt(`${product.quantity}`, 10) || 1,
+      product_id: product.id,
+      variant_id: product.variantId,
+      option_selections: (product.newSelectOptionList || []).map((option: any) => ({
+        option_id: option.optionId,
+        option_value: parseInt(`${option.optionValue}`, 10),
+      }))
+    };
 
-    if (res && res.errors) {
-      snackbar.error(res.errors[0].message);
+    const res = await createOrUpdateExistingCartCustom([atcProduct]);
+    
+    if (res && res.message) {
+      snackbar.error(res.message);
     } else {
       snackbar.success(b3Lang('purchasedProducts.quickOrderPad.productsAdded'), {
         action: {

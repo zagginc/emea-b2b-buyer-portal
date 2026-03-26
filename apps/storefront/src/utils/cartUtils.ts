@@ -5,7 +5,6 @@ import { addNewLineToCart, createNewCart, getCart } from '@/shared/service/bc/gr
 
 import { LineItem, StorefrontAPILineItem } from './b3Product/b3Product';
 import { EcoTaxCustomFieldProductResponse, getEcoTaxCustomFieldValues, getEcoTaxItemName } from '@/shared/service/bc/graphql/ecotax';
-import { useB3Lang } from '@/lib/lang';
 import { snackbar } from '@/utils/b3Tip';
 import { getStorefrontAPIUrl } from '@/shared/service/request/base';
 
