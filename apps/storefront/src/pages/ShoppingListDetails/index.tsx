@@ -34,6 +34,8 @@ import b2bLogger from '@/utils/b3Logger';
 import {
   addQuoteDraftProducts,
   calculateProductListPrice,
+  formatOptionId,
+  StorefrontAPILineItem,
   validProductQty,
 } from '@/utils/b3Product/b3Product';
 import {
@@ -58,6 +60,7 @@ import {
   createOrUpdateExistingCart as rawCreateOrUpdateExistingCart,
   deleteCartData,
   updateCart as rawUpdateCart,
+  createOrUpdateExistingCartCustom,
 } from '@/utils/cartUtils';
 import {
   convertStockAndThresholdValidationErrorToWarning,
@@ -764,16 +767,38 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     if (validateSuccessArr.length !== 0) {
       const cartInfo = await getCart();
       let res = null;
+      
+      // CUSTOM CODE
+      const atcLineItems: StorefrontAPILineItem[] = validateSuccessArr.map(product => {
+        const selectedOptions = JSON.parse(product.node.optionList);
 
+        return ({
+          quantity: parseInt(`${product.node.quantity}`, 10) || 1,
+          product_id: product.node.productId,
+          variant_id: product.node.variantId,
+          option_selections: (selectedOptions || []).map((option: any) => ({
+            option_id: formatOptionId(option.option_id),
+            option_value: parseInt(`${option.option_value}`, 10),
+          }))
+        })
+      });
+      
       if (allowJuniorPlaceOrder && cartInfo.data.site.cart) {
         await deleteCart(deleteCartData(cartInfo.data.site.cart.entityId));
-        res = await updateCart(cartInfo, validateSuccessArr);
+        // res = await updateCart(cartInfo, validateSuccessArr);
+
+        // CUSTOM CODE
+        res = await createOrUpdateExistingCartCustom(atcLineItems);
       } else {
-        res = await createOrUpdateExistingCart(validateSuccessArr);
+        // res = await createOrUpdateExistingCart(validateSuccessArr);
+
+        // CUSTOM CODE
+        res = await createOrUpdateExistingCartCustom(atcLineItems);
         b3TriggerCartNumber();
       }
-      if (res && res.errors) {
-        snackbar.error(res.errors[0].message);
+
+      if (res && res.message) {
+        snackbar.error(res.message);
       } else if (validateFailureArr.length === 0) {
         shouldRedirectToCheckoutAfterAddToCart();
       }
@@ -784,11 +809,29 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
   };
 
   const handleAddToCartBackend = async () => {
+    // CUSTOM CODE
+    const atcLineItems: StorefrontAPILineItem[] = checkedArr.map(product => {
+      const selectedOptions = JSON.parse(product.node.optionList);
+
+      return ({
+        quantity: parseInt(`${product.node.quantity}`, 10) || 1,
+        product_id: product.node.productId,
+        variant_id: product.node.variantId,
+        option_selections: (selectedOptions || []).map((option: any) => ({
+          option_id: formatOptionId(option.option_id),
+          option_value: parseInt(`${option.option_value}`, 10),
+        }))
+      })
+    });
+    
     try {
       const cartInfo = await getCart();
       if (allowJuniorPlaceOrder && cartInfo.data.site.cart) {
         await deleteCart(deleteCartData(cartInfo.data.site.cart.entityId));
-        await updateCart(cartInfo, checkedArr);
+        // await updateCart(cartInfo, checkedArr);
+
+        // CUSTOM CODE
+        await createOrUpdateExistingCartCustom(atcLineItems);
       } else {
         const errors = await partialAddToCart(checkedArr);
 

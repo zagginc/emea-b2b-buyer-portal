@@ -92,6 +92,7 @@ const transformToCartLineItems = (productsSearch: Product[], checkedArr: Checked
 };
 
 function QuickOrderFooter(props: QuickOrderFooterProps) {
+  
   const { checkedArr, isAgenting, setIsRequestLoading, isB2BUser } = props;
   const {
     state: { productQuoteEnabled = false, shoppingListEnabled = false },
@@ -182,13 +183,13 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
             option_value: parseInt(`${option.optionValue}`, 10),
           }))
       }));
-
+      
       const res = await createOrUpdateExistingCartCustom(atcLineItems);
       
-      if (res && !res.errors) {
+      if (res && !res.message) {
         showAddToCartSuccessMessage();
-      } else if (res && res.errors) {
-        snackbar.error(res.errors[0].message);
+      } else if (res && res.message) {
+        snackbar.error(res.message);
       } else {
         snackbar.error('Error has occurred');
       }

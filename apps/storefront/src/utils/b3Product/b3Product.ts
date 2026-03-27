@@ -1060,6 +1060,10 @@ const judgmentBuyerProduct = ({ productInfo, isProduct, price }: DisplayPricePro
   return !!newPrice;
 };
 
+const formatOptionId = (optionString: string): number => {
+  return Number(optionString.split('[')[1].replace(']', ''));
+};
+
 export {
   addQuoteDraftProduce,
   addQuoteDraftProducts,
@@ -1073,4 +1077,5 @@ export {
   judgmentBuyerProduct,
   setModifierQtyPrice,
   validProductQty,
+  formatOptionId
 };

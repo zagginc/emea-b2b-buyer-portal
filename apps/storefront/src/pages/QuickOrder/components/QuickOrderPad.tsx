@@ -22,7 +22,7 @@ import { addCartProductToVerify } from '../utils';
 import QuickAdd from './QuickAdd';
 import SearchProduct from './SearchProduct';
 import { ValidProductItem } from './ValidProduct';
-import { StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
+import { formatOptionId, StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
 
 export default function QuickOrderPad() {
   const [isMobile] = useMobile();
@@ -203,7 +203,7 @@ export default function QuickOrderPad() {
             option_value: parseInt(`${option.optionValue}`, 10),
           }))
         }));
-
+        
         const res = await createOrUpdateExistingCartCustom(atcProducts);
 
         if (res && res.message) {

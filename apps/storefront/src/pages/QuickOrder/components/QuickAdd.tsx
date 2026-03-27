@@ -26,7 +26,7 @@ import {
   mergeValidatedWithCatalog,
   parseOptionList,
 } from './QuickAdd.validation';
-import { StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
+import { formatOptionId, StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
 
 const INITIAL_NUM_ROWS = 3;
 
@@ -354,7 +354,7 @@ export default function QuickAdd() {
       product_id: product.productId,
       variant_id: product.variantId,
       option_selections: (product.newSelectOptionList || []).map((option: any) => ({
-        option_id: option.optionId,
+        option_id: formatOptionId(option.optionId),
         option_value: parseInt(`${option.optionValue}`, 10),
       }))
     }));
