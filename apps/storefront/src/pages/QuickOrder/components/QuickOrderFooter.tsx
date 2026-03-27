@@ -184,7 +184,6 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
       }));
 
       const res = await createOrUpdateExistingCartCustom(atcLineItems);
-      console.log('JC - res', res);
       
       if (res && !res.errors) {
         showAddToCartSuccessMessage();

@@ -180,7 +180,7 @@ export default function QuickOrderPad() {
     setIsLoading(true);
     try {
       const { stockErrorFile, validProduct } = productsData;
-
+      
       const {
         notPurchaseSku,
         productItems,
@@ -191,9 +191,37 @@ export default function QuickOrderPad() {
       } = getValidProducts(validProduct);
 
       if (productItems.length > 0) {
-        const res = await createOrUpdateExistingCart(productItems);
+        // const res = await createOrUpdateExistingCart(productItems);
 
-        getSnackbarMessage(res);
+        // CUSTOM CODE
+        const atcProducts: StorefrontAPILineItem[] = productItems.map(product => ({
+          quantity: parseInt(`${product.quantity}`, 10) || 1,
+          product_id: product.productId,
+          variant_id: product.variantId,
+          option_selections: (product.optionSelections || []).map((option: any) => ({
+            option_id: option.optionId,
+            option_value: parseInt(`${option.optionValue}`, 10),
+          }))
+        }));
+
+        const res = await createOrUpdateExistingCartCustom(atcProducts);
+
+        if (res && res.message) {
+          snackbar.error(res.message);
+        } else {
+          snackbar.success(b3Lang('purchasedProducts.quickOrderPad.productsAdded'), {
+            action: {
+              label: b3Lang('purchasedProducts.quickOrderPad.viewCart'),
+              onClick: () => {
+                if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
+                  window.location.href = CART_URL;
+                }
+              },
+            },
+          });
+        }
+        
+        // getSnackbarMessage(res);
         b3TriggerCartNumber();
       }
 
@@ -372,8 +400,37 @@ export default function QuickOrderPad() {
         .filter((item) => item !== null);
 
       if (cartLineItems.length > 0) {
-        const res = await createOrUpdateExistingCart(cartLineItems);
-        getSnackbarMessage(res);
+        // const res = await createOrUpdateExistingCart(cartLineItems);
+
+        // CUSTOM CODE
+        const atcProducts: StorefrontAPILineItem[] = cartLineItems.map(product => ({
+          quantity: parseInt(`${product.quantity}`, 10) || 1,
+          product_id: product.productId,
+          variant_id: product.variantId,
+          option_selections: (product.optionSelections || []).map((option: any) => ({
+            option_id: option.optionId,
+            option_value: parseInt(`${option.optionValue}`, 10),
+          }))
+        }));
+
+        const res = await createOrUpdateExistingCartCustom(atcProducts);
+
+        if (res && res.message) {
+          snackbar.error(res.message);
+        } else {
+          snackbar.success(b3Lang('purchasedProducts.quickOrderPad.productsAdded'), {
+            action: {
+              label: b3Lang('purchasedProducts.quickOrderPad.viewCart'),
+              onClick: () => {
+                if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
+                  window.location.href = CART_URL;
+                }
+              },
+            },
+          });
+        }
+
+        // getSnackbarMessage(res);
         b3TriggerCartNumber();
       }
       setIsOpenBulkLoadCSV(false);
