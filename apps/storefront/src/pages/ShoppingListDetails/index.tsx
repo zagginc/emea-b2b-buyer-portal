@@ -176,13 +176,29 @@ const updateCart = (cartInfo: any, products: ProductsProps[]) =>
 
 const partialAddToCart = async (checkedArr: ProductsProps[]) => {
   try {
-    await createOrUpdateExistingCart(checkedArr);
-    return [];
-  } catch (apiError: unknown) {
-    if (!(apiError instanceof CartError)) {
-      throw apiError;
-    }
+    // CUSTOM CODE
+    const atcLineItems: StorefrontAPILineItem[] = checkedArr.map(product => {
+      const selectedOptions = JSON.parse(product.node.optionList);
 
+      return ({
+        quantity: parseInt(`${product.node.quantity}`, 10) || 1,
+        product_id: product.node.productId,
+        variant_id: product.node.variantId,
+        option_selections: (selectedOptions || []).map((option: any) => ({
+          option_id: formatOptionId(option.option_id),
+          option_value: parseInt(`${option.option_value}`, 10),
+        }))
+      })
+    });
+
+    const res = await createOrUpdateExistingCartCustom(atcLineItems);
+
+    if (res && res.message) {
+      throw new Error(res)
+    } else {
+      return [];
+    }
+  } catch (e) {
     const { success, error, warning } = await validateProducts(
       checkedArr.map((item) => ({
         productId: item.node.productId,
@@ -192,9 +208,24 @@ const partialAddToCart = async (checkedArr: ProductsProps[]) => {
         item,
       })),
     );
-
+    
     if (success.length > 0) {
-      await createOrUpdateExistingCart(success.map((p) => p.product.item));
+      // CUSTOM CODE
+      const atcLineItems: StorefrontAPILineItem[] = success.map(product => {
+
+        return ({
+          quantity: parseInt(`${product.product.quantity}`, 10) || 1,
+          product_id: product.product.productId,
+          variant_id: product.product.variantId,
+          option_selections: (product.product.productOptions || []).map((option: any) => ({
+            option_id: formatOptionId(option.optionId),
+            option_value: parseInt(`${option.optionValue}`, 10),
+          }))
+        })
+      });
+
+      await createOrUpdateExistingCartCustom(atcLineItems);
+      // await createOrUpdateExistingCart(success.map((p) => p.product.item));
     }
 
     return [...error, ...warning];
@@ -498,7 +529,22 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
       return;
     }
 
-    const res = await createOrUpdateExistingCart(products);
+    // CUSTOM CODE
+    const atcLineItems: StorefrontAPILineItem[] = products.map(product => {
+      const selectedOptions = JSON.parse(product.node.optionList);
+
+      return ({
+        quantity: parseInt(`${product.node.quantity}`, 10) || 1,
+        product_id: product.node.productId,
+        variant_id: product.node.variantId,
+        option_selections: (selectedOptions || []).map((option: any) => ({
+          option_id: formatOptionId(option.option_id),
+          option_value: parseInt(`${option.option_value}`, 10),
+        }))
+      })
+    });
+
+    const res = await createOrUpdateExistingCartCustom(atcLineItems);
 
     if (!res.errors) {
       shouldRedirectToCheckoutAfterRetry();
@@ -709,7 +755,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     }
   };
 
-  const retryAddToCart = isBackorderEnabled ? retryAddToCartBackend : retryAddToCartFrontend;
+  const retryAddToCart = !isBackorderEnabled ? retryAddToCartBackend : retryAddToCartFrontend;
 
   const shouldRedirectToCheckoutAfterAddToCart = () => {
     if (
@@ -803,7 +849,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
         shouldRedirectToCheckoutAfterAddToCart();
       }
     }
-
+    
     setValidateFailureProducts(validateFailureArr);
     setSuccessProductsCount(validateSuccessArr.length);
   };
