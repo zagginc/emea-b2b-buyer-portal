@@ -11,6 +11,7 @@ import { currencyFormat, ordersCurrencyFormat } from '@/utils/b3CurrencyFormat';
 import { getDisplayPrice, judgmentBuyerProduct } from '@/utils/b3Product/b3Product';
 
 import { MoneyFormat, ProductItem } from '../types';
+import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
 
 interface FlexProps {
   isHeader?: boolean;
@@ -376,34 +377,54 @@ export function B3ProductList<T>(props: ProductProps<T>) {
               <Checkbox checked={isChecked(product)} onChange={() => handleSelectChange(product)} />
             )}
             <FlexItem padding={isMobile ? '0' : '0 6% 0 0'}>
-              <ProductImage src={product.imageUrl || PRODUCT_DEFAULT_IMAGE} />
+              {isEcoTaxProduct(product.sku) ? (
+                <ProductImage />
+              ) : (
+                <ProductImage src={product.imageUrl || PRODUCT_DEFAULT_IMAGE} />
+              )}
               <Box
                 sx={{
                   marginLeft: '16px',
                 }}
               >
-                <Typography
-                  variant="body1"
-                  color="#212121"
-                  onClick={() => {
-                    if (canToProduct) {
-                      const {
-                        location: { origin },
-                      } = window;
+                {isEcoTaxProduct(product.sku) ? (
+                  <Typography
+                    variant="body1"
+                    color="#212121"
+                    sx={{
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {product.name}
+                  </Typography>
+                ) : (
+                  <Typography
+                    variant="body1"
+                    color="#212121"
+                    onClick={() => {
+                      if (canToProduct) {
+                        const {
+                          location: { origin },
+                        } = window;
 
-                      if (product?.productUrl)
-                        window.location.href = `${origin}${product?.productUrl}`;
-                    }
-                  }}
-                  sx={{
-                    cursor: 'pointer',
-                  }}
-                >
-                  {product.name}
-                </Typography>
-                <Typography variant="body1" color="#616161">
-                  {product.sku}
-                </Typography>
+                        if (product?.productUrl)
+                          window.location.href = `${origin}${product?.productUrl}`;
+                      }
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {product.name}
+                  </Typography>
+                )}
+
+                {!isEcoTaxProduct(product.sku) && 
+                  <Typography variant="body1" color="#616161">
+                    {product.sku}
+                  </Typography>
+                }
+
                 {product.type === 'digital' &&
                   product.downloadFileUrls &&
                   product.downloadFileUrls.length > 0 && (

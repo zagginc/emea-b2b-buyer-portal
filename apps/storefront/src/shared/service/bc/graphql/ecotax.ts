@@ -41,6 +41,14 @@ export const getEcoTaxItemName = (productName: string) => {
     return `Eco Participation - ${productName}`;
 };
 
+// Check if product is an eco tax product
+export const isEcoTaxProduct = (sku: string): boolean => {
+  if (sku.toLowerCase().includes('participation')) {
+    return true;
+  };
+
+  return false;
+};
 export interface EcoTaxCustomFieldProductResponse {
   node: EcoTaxCustomFieldProductResponseNode;
 }

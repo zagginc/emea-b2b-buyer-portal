@@ -20,6 +20,7 @@ import { snackbar } from '@/utils/b3Tip';
 import { OrderDetailsContext, OrderDetailsState } from '../context/OrderDetailsContext';
 
 import OrderDialog from './OrderDialog';
+import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
 
 const OrderActionContainer = styled('div')(() => ({}));
 
@@ -192,6 +193,11 @@ function OrderCard(props: OrderCardProps) {
     }
   };
 
+  const filterOutEcoTaxProducts = (allProducts: OrderProductItem[]) => {
+    const filteredProducts: OrderProductItem[] = allProducts.filter(product => !isEcoTaxProduct(product.sku))
+    return filteredProducts;
+  };
+
   let showedInformation: ReactNode[] | string = infoValue?.map((value: string) => (
     <PaymentItemContainer key={value}>{value}</PaymentItemContainer>
   ));
@@ -280,7 +286,7 @@ function OrderCard(props: OrderCardProps) {
 
       <OrderDialog
         open={open}
-        products={products}
+        products={filterOutEcoTaxProducts(products)}
         currentDialogData={currentDialogData}
         type={type}
         setOpen={setOpen}
