@@ -27,6 +27,7 @@ import { CustomStyleContext } from '@/shared/customStyleButton';
 import { b3HexToRgb, getContrastColor } from '../outSideComponents/utils/b3CustomStyles';
 
 import { B3NoData } from './B3NoData';
+import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
 
 interface NodeWrapper<T extends object> {
   node: T;
@@ -42,6 +43,7 @@ export type WithRowControls<T> = T & {
   id?: string | number;
   isCollapse?: boolean;
   disableCurrentCheckbox?: boolean;
+  sku?: string;
 };
 
 interface Pagination {
@@ -148,6 +150,12 @@ function Row<Row>({
 
   const [open, setOpen] = useState<boolean>(isCollapse || false);
 
+  let isCheckboxDisabled: boolean = !!disableCheckbox;
+
+  if (node.sku) {
+    isCheckboxDisabled = isEcoTaxProduct(node.sku)
+  };
+
   return (
     <>
       <TableRow
@@ -172,7 +180,7 @@ function Row<Row>({
                 // @ts-expect-error typed previously as an any
                 if (handleSelectOneItem) handleSelectOneItem(node[selectedSymbol]);
               }}
-              disabled={applyAllDisableCheckbox ? disableCheckbox : disableCurrentCheckbox}
+              disabled={applyAllDisableCheckbox ? isCheckboxDisabled : disableCurrentCheckbox}
             />
           </TableCell>
         )}
@@ -297,7 +305,7 @@ export function B3Table<Row>({
     <>
       {isInfiniteScroll && (
         <>
-          {showSelectAllCheckbox && (
+          {showSelectAllCheckbox &&
             <Box
               sx={{
                 display: 'flex',
@@ -315,7 +323,7 @@ export function B3Table<Row>({
               />
               Select all
             </Box>
-          )}
+          }
           <Grid container spacing={itemIsMobileSpacing}>
             {listItems.map((row, index) => {
               const node = isNodeWrapper(row) ? row.node : row;
@@ -425,8 +433,8 @@ export function B3Table<Row>({
               {!tableHeaderHide && (
                 <TableHead>
                   <TableRow data-testid="tableHead-Row">
-                    {showSelectAllCheckbox && (
                       <TableCell key="showSelectAllCheckbox">
+                        {showSelectAllCheckbox && (
                         <Checkbox
                           checked={
                             isSelectOtherPageCheckbox
@@ -436,8 +444,8 @@ export function B3Table<Row>({
                           onChange={handleSelectAllItems}
                           disabled={disableCheckbox}
                         />
+                          )}
                       </TableCell>
-                    )}
                     {CollapseComponent && <TableCell width="2%" />}
 
                     {columnItems.map((column) => (

@@ -6,6 +6,7 @@ import { useB3Lang } from '@/lib/lang';
 import b2bGetVariantImageByVariantInfo from '@/utils/b2bGetVariantImageByVariantInfo';
 import { currencyFormat } from '@/utils/b3CurrencyFormat';
 import { displayFormat } from '@/utils/b3DateFormat';
+import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
 
 interface QuickOrderCardProps {
   item: any;
@@ -33,6 +34,7 @@ function QuickOrderCard(props: QuickOrderCardProps) {
     lastOrderedAt,
     variantId,
     productsSearch,
+    sku
   } = shoppingDetail;
 
   const price = Number(basePrice) * Number(quantity);
@@ -53,7 +55,9 @@ function QuickOrderCard(props: QuickOrderCardProps) {
           pl: 0,
         }}
       >
-        <Box>{checkBox && checkBox()}</Box>
+        <Box>
+          {checkBox && checkBox()}
+        </Box>
         <Box>
           <StyledImage
             src={currentImage || PRODUCT_DEFAULT_IMAGE}
@@ -70,7 +74,7 @@ function QuickOrderCard(props: QuickOrderCardProps) {
             {productName}
           </Typography>
           <Typography variant="body1" color="#616161">
-            {variantSku}
+            {!isEcoTaxProduct(sku) && variantSku}
           </Typography>
           <Box
             sx={{
@@ -94,7 +98,6 @@ function QuickOrderCard(props: QuickOrderCardProps) {
               </Box>
             )}
           </Box>
-
           <Typography sx={{ fontSize: '14px' }}>
             {b3Lang('purchasedProducts.quickOrderCard.price', {
               price: currencyFormat(price),
@@ -107,31 +110,37 @@ function QuickOrderCard(props: QuickOrderCardProps) {
               },
             }}
           >
-            <TextField
-              size="small"
-              type="number"
-              variant="filled"
-              label="Qty"
-              inputProps={{
-                inputMode: 'numeric',
-                pattern: '[0-9]*',
-              }}
-              value={quantity}
-              sx={{
-                margin: '1rem 0',
-                width: '60%',
-                maxWidth: '100px',
-                '& label': {
-                  fontSize: '14px',
-                },
-                '& input': {
-                  fontSize: '14px',
-                },
-              }}
-              onChange={(e) => {
-                handleUpdateProductQty(shoppingDetail.id, e.target.value);
-              }}
-            />
+            {isEcoTaxProduct(sku) ? (
+              <Typography sx={{ fontSize: '14px' }}>
+                {quantity}
+              </Typography>
+            ) : (
+              <TextField
+                size="small"
+                type="number"
+                variant="filled"
+                label="Qty"
+                inputProps={{
+                  inputMode: 'numeric',
+                  pattern: '[0-9]*',
+                }}
+                value={quantity}
+                sx={{
+                  margin: '1rem 0',
+                  width: '60%',
+                  maxWidth: '100px',
+                  '& label': {
+                    fontSize: '14px',
+                  },
+                  '& input': {
+                    fontSize: '14px',
+                  },
+                }}
+                onChange={(e) => {
+                  handleUpdateProductQty(shoppingDetail.id, e.target.value);
+                }}
+              />
+            )}
           </Box>
 
           <Typography sx={{ fontSize: '14px' }}>

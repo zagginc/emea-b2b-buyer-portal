@@ -26,6 +26,7 @@ import B3FilterSearch from '../../../components/filter/B3FilterSearch';
 import { CheckedProduct } from '../utils';
 
 import QuickOrderCard from './QuickOrderCard';
+import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
 
 interface ProductInfoProps {
   basePrice: number | string;
@@ -182,7 +183,7 @@ function QuickOrderTable({
     return [];
   };
 
-  const getList: GetRequestList<SearchProps, ProductInfoProps> = async (params) => {
+  const getList: GetRequestList<SearchProps, ProductInfoProps> = async (params) => {    
     const {
       orderedProducts: { edges, totalCount },
     } = await getOrderedProducts(params);
@@ -315,7 +316,7 @@ function QuickOrderTable({
       render: (row: CustomFieldItems) => {
         const { optionList, productsSearch, variantId } = row;
         const currentVariants = productsSearch.variants || [];
-
+        
         const currentImage =
           b2bGetVariantImageByVariantInfo(currentVariants, { variantId }) || row.imageUrl;
         return (
@@ -325,17 +326,21 @@ function QuickOrderTable({
               alignItems: 'flex-start',
             }}
           >
-            <StyledImage
-              src={currentImage || PRODUCT_DEFAULT_IMAGE}
-              alt="Product-img"
-              loading="lazy"
-            />
+            {isEcoTaxProduct(row.sku) ? (
+              <StyledImage/>
+            ) : (
+              <StyledImage
+                src={currentImage || PRODUCT_DEFAULT_IMAGE}
+                alt="Product-img"
+                loading="lazy"
+              />
+            )}
             <Box>
               <Typography variant="body1" color="#212121">
                 {row.productName}
               </Typography>
               <Typography variant="body1" color="#616161">
-                {row.variantSku}
+                {!isEcoTaxProduct(row.sku) && row.variantSku}
               </Typography>
               {optionList.length > 0 && (
                 <Box>
@@ -359,6 +364,9 @@ function QuickOrderTable({
       },
       width: '40%',
       isSortable: true,
+      style: {
+        verticalAlign: 'center'
+      },
     },
     {
       key: 'price',
@@ -391,30 +399,43 @@ function QuickOrderTable({
       },
       width: '15%',
       style: {
-        textAlign: 'right',
+        textAlign: 'right'
       },
     },
     {
       key: 'qty',
       title: b3Lang('purchasedProducts.qty'),
-      render: (row) => {
+      render: (row: CustomFieldItems) => {
         const qty = handleSetCheckedQty(row);
 
-        return (
-          <StyledTextField
-            size="small"
-            type="number"
-            variant="filled"
-            value={qty}
-            inputProps={{
-              inputMode: 'numeric',
-              pattern: '[0-9]*',
-            }}
-            onChange={(e) => {
-              handleUpdateProductQty(row.id, e.target.value);
-            }}
-          />
-        );
+        if (isEcoTaxProduct(row.sku)) {
+          return (
+            <Typography
+              sx={{
+                padding: '12px 0',
+              }}
+            >
+              {`${qty}`}
+            </Typography>
+          )
+
+        } else {
+          return (
+            <StyledTextField
+              size="small"
+              type="number"
+              variant="filled"
+              value={qty}
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
+              }}
+              onChange={(e) => {
+                handleUpdateProductQty(row.id, e.target.value);
+              }}
+            />
+          );
+        }
       },
       width: '15%',
       style: {
@@ -539,7 +560,7 @@ function QuickOrderTable({
           searchParams={search}
           isCustomRender={false}
           showCheckbox
-          showSelectAllCheckbox
+          showSelectAllCheckbox={false}
           disableCheckbox={false}
           hover
           labelRowsPerPage={b3Lang('purchasedProducts.itemsPerPage')}
