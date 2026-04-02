@@ -174,7 +174,7 @@ const createOrUpdateExistingCart = (products: ProductsProps[]) =>
 const updateCart = (cartInfo: any, products: ProductsProps[]) =>
   rawUpdateCart(cartInfo, addLineItems(products));
 
-const partialAddToCart = async (checkedArr: ProductsProps[]) => {
+const partialAddToCart = async (checkedArr: ProductsProps[]) => {  
   try {
     // CUSTOM CODE
     const atcLineItems: StorefrontAPILineItem[] = checkedArr.map(product => {
@@ -191,7 +191,7 @@ const partialAddToCart = async (checkedArr: ProductsProps[]) => {
       })
     });
 
-    const res = await createOrUpdateExistingCartCustom(atcLineItems);
+    const res = await createOrUpdateExistingCartCustom(atcLineItems, addLineItems(checkedArr));
 
     if (res && res.message) {
       throw new Error(res)
@@ -211,8 +211,8 @@ const partialAddToCart = async (checkedArr: ProductsProps[]) => {
     
     if (success.length > 0) {
       // CUSTOM CODE
+      const createCartLineItems = success.map((p) => p.product.item);
       const atcLineItems: StorefrontAPILineItem[] = success.map(product => {
-
         return ({
           quantity: parseInt(`${product.product.quantity}`, 10) || 1,
           product_id: product.product.productId,
@@ -224,7 +224,7 @@ const partialAddToCart = async (checkedArr: ProductsProps[]) => {
         })
       });
 
-      await createOrUpdateExistingCartCustom(atcLineItems);
+      await createOrUpdateExistingCartCustom(atcLineItems, addLineItems(createCartLineItems));
       // await createOrUpdateExistingCart(success.map((p) => p.product.item));
     }
 
@@ -544,7 +544,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
       })
     });
 
-    const res = await createOrUpdateExistingCartCustom(atcLineItems);
+    const res = await createOrUpdateExistingCartCustom(atcLineItems, addLineItems(products));
 
     if (!res.errors) {
       shouldRedirectToCheckoutAfterRetry();
@@ -755,7 +755,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     }
   };
 
-  const retryAddToCart = !isBackorderEnabled ? retryAddToCartBackend : retryAddToCartFrontend;
+  const retryAddToCart = isBackorderEnabled ? retryAddToCartBackend : retryAddToCartFrontend;
 
   const shouldRedirectToCheckoutAfterAddToCart = () => {
     if (
@@ -779,7 +779,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     }
   };
 
-  const handleAddToCartOnFrontend = async () => {
+  const handleAddToCartOnFrontend = async () => {    
     const skus: string[] = [];
 
     let cantPurchase = '';
@@ -834,12 +834,12 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
         // res = await updateCart(cartInfo, validateSuccessArr);
 
         // CUSTOM CODE
-        res = await createOrUpdateExistingCartCustom(atcLineItems);
+        res = await createOrUpdateExistingCartCustom(atcLineItems, addLineItems(validateSuccessArr));
       } else {
         // res = await createOrUpdateExistingCart(validateSuccessArr);
 
         // CUSTOM CODE
-        res = await createOrUpdateExistingCartCustom(atcLineItems);
+        res = await createOrUpdateExistingCartCustom(atcLineItems, addLineItems(validateSuccessArr));
         b3TriggerCartNumber();
       }
 
@@ -854,7 +854,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     setSuccessProductsCount(validateSuccessArr.length);
   };
 
-  const handleAddToCartBackend = async () => {
+  const handleAddToCartBackend = async () => {    
     // CUSTOM CODE
     const atcLineItems: StorefrontAPILineItem[] = checkedArr.map(product => {
       const selectedOptions = JSON.parse(product.node.optionList);
@@ -877,7 +877,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
         // await updateCart(cartInfo, checkedArr);
 
         // CUSTOM CODE
-        await createOrUpdateExistingCartCustom(atcLineItems);
+        await createOrUpdateExistingCartCustom(atcLineItems, addLineItems(checkedArr));
       } else {
         const errors = await partialAddToCart(checkedArr);
 

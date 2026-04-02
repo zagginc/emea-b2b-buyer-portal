@@ -71,7 +71,7 @@ export default function QuickOrderPad() {
       }))
     };
 
-    const res = await createOrUpdateExistingCartCustom([atcProduct]);
+    const res = await createOrUpdateExistingCartCustom([atcProduct], [product]);
     
     if (res && res.message) {
       snackbar.error(res.message);
@@ -204,7 +204,7 @@ export default function QuickOrderPad() {
           }))
         }));
         
-        const res = await createOrUpdateExistingCartCustom(atcProducts);
+        const res = await createOrUpdateExistingCartCustom(atcProducts, productItems);
 
         if (res && res.message) {
           snackbar.error(res.message);
@@ -413,7 +413,7 @@ export default function QuickOrderPad() {
           }))
         }));
 
-        const res = await createOrUpdateExistingCartCustom(atcProducts);
+        const res = await createOrUpdateExistingCartCustom(atcProducts, cartLineItems);
 
         if (res && res.message) {
           snackbar.error(res.message);

@@ -359,7 +359,7 @@ export default function QuickAdd() {
       }))
     }));
 
-    const res = await createOrUpdateExistingCartCustom(atcProducts);
+    const res = await createOrUpdateExistingCartCustom(atcProducts, products);
     
     if (res && res.message) {
       snackbar.error(res.message);

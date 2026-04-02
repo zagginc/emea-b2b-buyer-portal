@@ -184,7 +184,7 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
           }))
       }));
       
-      const res = await createOrUpdateExistingCartCustom(atcLineItems);
+      const res = await createOrUpdateExistingCartCustom(atcLineItems, lineItems);
       
       if (res && !res.message) {
         showAddToCartSuccessMessage();
@@ -215,7 +215,7 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
           }))
       }));
 
-      await createOrUpdateExistingCartCustom(atcLineItems);
+      await createOrUpdateExistingCartCustom(atcLineItems, lineItems);
 
       showAddToCartSuccessMessage();
     } catch (e) {
