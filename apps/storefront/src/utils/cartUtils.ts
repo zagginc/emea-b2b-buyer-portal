@@ -58,7 +58,7 @@ const cartLineItems = (products: any) => {
         multipleChoices: [],
         textFields: [],
       },
-    );
+    );    
 
     return {
       quantity: parseInt(quantity || product.qty, 10),
@@ -105,6 +105,7 @@ export class CartError extends Error {
 
 const createNewShoppingCart = async (products: any) => {
   const cartData = newDataCart(products);
+  
   const res = await createNewCart(cartData);
   if (res?.errors?.length) {
     throw new CartError(res.errors[0].message);
@@ -138,12 +139,19 @@ export const createOrUpdateExistingCart = async (lineItems: LineItem[] | CustomF
   return res;
 };
 
-const createNewShoppingCartCustom = async (productData: any) => {  
+const createNewShoppingCartCustom = async (productData: StorefrontAPILineItem[], createCartLineItems: LineItem[] | CustomFieldItems[]) => { 
+  // Create a cart using just the first line item with GQL
+  // This is to circumvent a bug when creating a cart with the storefront API
+  const createCartRes = await createNewShoppingCart([createCartLineItems[0]]);
+  const cartId = createCartRes.data.cart.createCart.cart.entityId;
+
+  // Remove the first item from the product array, as this was added already at cart creation
+  productData.shift();
   const reqBody = {
     line_items: productData
   };
   
-  const res = await fetch(getStorefrontAPIUrl() + `/v3/carts`, {
+  const res = await fetch(getStorefrontAPIUrl() + `/v3/carts/${cartId}/items`, {
       method: 'POST',
       credentials: 'same-origin',
       headers: {
@@ -153,21 +161,15 @@ const createNewShoppingCartCustom = async (productData: any) => {
   })
   .then(res => res.json())
   .catch(err => err)
-  
+
   if (!res.data.id) {
     return res;
   };
 
-  const cartId = res.data.id;
-  Cookies.set('cartId', cartId);
-  dispatchEvent('on-cart-created', {
-    cartId: cartId,
-  });
-
   return res;
 };
 
-export const updateCartCustom = async (cartInfo: any, productData: any) => {
+export const updateCartCustom = async (cartInfo: any, productData: StorefrontAPILineItem[]) => {
   const cartId = cartInfo?.data?.site?.cart?.entityId;
   const reqBody = {
     line_items: productData
@@ -185,10 +187,11 @@ export const updateCartCustom = async (cartInfo: any, productData: any) => {
   .catch(err => err)
 };
 
-export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPILineItem[]) => {
+export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPILineItem[], createCartLineItems: LineItem[] | CustomFieldItems[]) => {
   const productIds: number[] = [];
   const _lineItems: StorefrontAPILineItem[] = [...lineItems];
 
+  // Fetch any ecotax product id's for applicable products
   _lineItems.forEach((item) => productIds.push(item.product_id));
   const ecoTaxCustomFieldResponse: EcoTaxCustomFieldProductResponse[] = await getEcoTaxCustomFieldValues(productIds);
 
@@ -197,13 +200,16 @@ export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPIL
     return;
   } 
   
+  // Loop through products in the ecotax response
   ecoTaxCustomFieldResponse.forEach((productData) => {
+    // Check for ecotax product ID custom field
     if (productData.node.customFields.edges.length > 0) {
       const ecoTaxProductData = productData.node.customFields.edges[0].node;
       let baseProductIndex: number | null = null;
       let baseProductData: StorefrontAPILineItem | null = null;
       let baseProductName: string | null = null;
 
+      // Find the index and data for the base product the ecotax is attached to
       _lineItems.forEach((item, index) => {
         if (item.product_id === productData.node.entityId) {
           baseProductIndex = index;
@@ -212,9 +218,11 @@ export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPIL
         };
       });
 
+      // Add ecotax product to the line item array after the base product it's attached to
       if (baseProductIndex !== null && baseProductData && baseProductName) {        
         _lineItems.splice(baseProductIndex + 1, 0, {
           product_id: parseInt(ecoTaxProductData.value),
+          // @ts-expect-error
           quantity: baseProductData?.quantity,
           name: getEcoTaxItemName(baseProductName)
         })
@@ -226,7 +234,7 @@ export const createOrUpdateExistingCartCustom = async (lineItems: StorefrontAPIL
   
   const res = cartInfo?.data?.site?.cart
     ? await updateCartCustom(cartInfo, _lineItems)
-    : await createNewShoppingCartCustom(_lineItems);
+    : await createNewShoppingCartCustom(_lineItems, createCartLineItems);
 
   return res;
 };

@@ -234,49 +234,8 @@ export default function OrderDialog({
   };
 
   const handleReorderOnFrontend = async () => {
-    // const items: CustomFieldItems[] = [];
-    // const skus: string[] = [];
-    // editableProducts.forEach((product) => {
-    //   if (checkedArr.includes(product.variant_id)) {
-    //     items.push({
-    //       quantity: parseInt(`${product.editQuantity}`, 10) || 1,
-    //       productId: product.product_id,
-    //       variantId: product.variant_id,
-    //       optionSelections: (product.product_options || []).map((option) => ({
-    //         optionId: option.product_option_id,
-    //         optionValue: option.value,
-    //       })),
-    //       allOptions: product.product_options,
-    //     });
-
-    //     skus.push(product.sku);
-    //   }
-    // });
-
-    // if (skus.length <= 0) {
-    //   return;
-    // }
-
-    // if (!validateProductNumber(variantInfoList, skus)) {
-    //   snackbar.error(b3Lang('purchasedProducts.error.fillCorrectQuantity'));
-    //   return;
-    // }
-
-    // // This will throw if there are errors, no need to check the response
-    // await createOrUpdateExistingCart(items);
-
-    // setOpen(false);
-    // snackbar.success(b3Lang('orderDetail.reorder.productsAdded'), {
-    //   action: {
-    //     label: b3Lang('orderDetail.viewCart'),
-    //     onClick: () => {
-    //       if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
-    //         window.location.href = CART_URL;
-    //       }
-    //     },
-    //   },
-    // });
-
+    // Item data for create cart GQL call
+    const createCartItems: CustomFieldItems[] = [];
 
     // CUSTOM CODE BELOW
     const items: StorefrontAPILineItem[] = [];
@@ -293,6 +252,17 @@ export default function OrderDialog({
           }))
         });
 
+        createCartItems.push({
+          quantity: parseInt(`${product.editQuantity}`, 10) || 1,
+          productId: product.product_id,
+          variantId: product.variant_id,
+          optionSelections: (product.product_options || []).map((option) => ({
+            optionId: option.product_option_id,
+            optionValue: option.value,
+          })),
+          allOptions: product.product_options,
+        });
+
         skus.push(product.sku);
       }
     });
@@ -306,7 +276,7 @@ export default function OrderDialog({
       return;
     }
     
-    const res = await createOrUpdateExistingCartCustom(items);
+    const res = await createOrUpdateExistingCartCustom(items, createCartItems);
 
     if (res.message) {
       snackbar.error(res.message);
