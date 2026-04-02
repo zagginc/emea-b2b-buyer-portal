@@ -350,23 +350,41 @@ export default function OrderDialog({
       ...product,
       optionSelections: product.productOptions,
     }));
-
+    
     // This will throw if there are errors, no need to check the response
-    await createOrUpdateExistingCart(validItems);
+    // await createOrUpdateExistingCart(validItems);
 
-    const successfulVariantIds = validItems.map((item) => item.variantId);
+    // CUSTOM CODE
+    const atcItems: StorefrontAPILineItem[] = validItems.map(item => ({
+      quantity: parseInt(`${item.editQuantity}`, 10) || 1,
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      option_selections: (item.productOptions || []).map((option) => ({
+        option_id: option.optionId,
+        option_value: parseInt(`${option.optionValue}`, 10),
+      }))
+    }));
 
-    if (successfulVariantIds.length === checkedArr.length) {
-      setOpen(false);
-      showSuccessSnackbarWithCartLink(b3Lang('orderDetail.reorder.productsAdded'));
+    const res = await createOrUpdateExistingCartCustom(atcItems, validItems)
+    if (res.message) {
+      snackbar.error(res.message);
+      setIsRequestLoading(false);
+      return;
     } else {
-      snackbar.error(b3Lang('orderDetail.reorder.addToCartError'));
-      showSuccessSnackbarWithCartLink(
-        b3Lang('orderDetail.reorder.partialSuccess', { count: validItems.length }),
-      );
-      setCheckedArr((prev) =>
-        prev.filter((variantId) => !successfulVariantIds.includes(variantId)),
-      );
+      const successfulVariantIds = validItems.map((item) => item.variantId);
+
+      if (successfulVariantIds.length === checkedArr.length) {
+        setOpen(false);
+        showSuccessSnackbarWithCartLink(b3Lang('orderDetail.reorder.productsAdded'));
+      } else {
+        snackbar.error(b3Lang('orderDetail.reorder.addToCartError'));
+        showSuccessSnackbarWithCartLink(
+          b3Lang('orderDetail.reorder.partialSuccess', { count: validItems.length }),
+        );
+        setCheckedArr((prev) =>
+          prev.filter((variantId) => !successfulVariantIds.includes(variantId)),
+        );
+      }
     }
   };
 
