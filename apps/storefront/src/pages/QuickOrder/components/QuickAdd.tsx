@@ -13,7 +13,7 @@ import { getVariantInfoBySkus } from '@/shared/service/b2b';
 import { useAppSelector } from '@/store';
 import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
-import { createOrUpdateExistingCart, createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
+import { createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
 import { ValidatedProductError, validateProductsLegacy } from '@/utils/validateProducts';
 
 import { SimpleObject } from '../../../types';

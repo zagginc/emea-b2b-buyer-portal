@@ -15,14 +15,14 @@ import { useAppSelector } from '@/store';
 import b2bLogger from '@/utils/b3Logger';
 import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
-import { createOrUpdateExistingCart, createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
+import { createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
 
 import { addCartProductToVerify } from '../utils';
 
 import QuickAdd from './QuickAdd';
 import SearchProduct from './SearchProduct';
 import { ValidProductItem } from './ValidProduct';
-import { formatOptionId, StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
+import { StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
 
 export default function QuickOrderPad() {
   const [isMobile] = useMobile();
@@ -40,22 +40,22 @@ export default function QuickOrderPad() {
 
   const companyStatus = useAppSelector(({ company }) => company.companyInfo.status);
 
-  const getSnackbarMessage = (res: any) => {
-    if (res && !res.errors) {
-      snackbar.success(b3Lang('purchasedProducts.quickOrderPad.productsAdded'), {
-        action: {
-          label: b3Lang('purchasedProducts.quickOrderPad.viewCart'),
-          onClick: () => {
-            if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
-              window.location.href = CART_URL;
-            }
-          },
-        },
-      });
-    } else {
-      snackbar.error('Error has occurred');
-    }
-  };
+  // const getSnackbarMessage = (res: any) => {
+  //   if (res && !res.errors) {
+  //     snackbar.success(b3Lang('purchasedProducts.quickOrderPad.productsAdded'), {
+  //       action: {
+  //         label: b3Lang('purchasedProducts.quickOrderPad.viewCart'),
+  //         onClick: () => {
+  //           if (window.b2b.callbacks.dispatchEvent('on-click-cart-button')) {
+  //             window.location.href = CART_URL;
+  //           }
+  //         },
+  //       },
+  //     });
+  //   } else {
+  //     snackbar.error('Error has occurred');
+  //   }
+  // };
 
   const addSingleProductToCart = async (product: CustomFieldItems) => {
     // const res = await createOrUpdateExistingCart([product]);

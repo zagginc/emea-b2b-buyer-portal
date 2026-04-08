@@ -7,7 +7,6 @@ import { LineItem, StorefrontAPILineItem } from './b3Product/b3Product';
 import { EcoTaxCustomFieldProductResponse, getEcoTaxCustomFieldValues, getEcoTaxItemName } from '@/shared/service/bc/graphql/ecotax';
 import { snackbar } from '@/utils/b3Tip';
 import { getStorefrontAPIUrl } from '@/shared/service/request/base';
-import { storeHash } from '@/utils/basicConfig';
 
 const handleSplitOptionId = (id: string | number) => {
   if (typeof id === 'string' && id.includes('attribute')) {

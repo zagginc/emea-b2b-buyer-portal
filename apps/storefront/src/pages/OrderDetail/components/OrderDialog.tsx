@@ -20,7 +20,7 @@ import b2bLogger from '@/utils/b3Logger';
 import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
 import { BigCommerceStorefrontAPIBaseURL } from '@/utils/basicConfig';
-import { createOrUpdateExistingCart, createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
+import { createOrUpdateExistingCartCustom } from '@/utils/cartUtils';
 import { validateProductsLegacy as rawValidateProducts } from '@/utils/validateProducts';
 
 import { EditableProductItem, OrderProductItem } from '../../../types';

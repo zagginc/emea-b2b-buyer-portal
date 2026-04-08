@@ -56,10 +56,7 @@ import { snackbar } from '@/utils/b3Tip';
 import b3TriggerCartNumber from '@/utils/b3TriggerCartNumber';
 import { channelId } from '@/utils/basicConfig';
 import {
-  CartError,
-  createOrUpdateExistingCart as rawCreateOrUpdateExistingCart,
   deleteCartData,
-  updateCart as rawUpdateCart,
   createOrUpdateExistingCartCustom,
 } from '@/utils/cartUtils';
 import {
@@ -168,11 +165,11 @@ function useData() {
 
 // 0: Admin, 1: Senior buyer, 2: Junior buyer, 3: Super admin
 
-const createOrUpdateExistingCart = (products: ProductsProps[]) =>
-  rawCreateOrUpdateExistingCart(addLineItems(products));
+// const createOrUpdateExistingCart = (products: ProductsProps[]) =>
+//   rawCreateOrUpdateExistingCart(addLineItems(products));
 
-const updateCart = (cartInfo: any, products: ProductsProps[]) =>
-  rawUpdateCart(cartInfo, addLineItems(products));
+// const updateCart = (cartInfo: any, products: ProductsProps[]) =>
+//   rawUpdateCart(cartInfo, addLineItems(products));
 
 const partialAddToCart = async (checkedArr: ProductsProps[]) => {  
   try {
