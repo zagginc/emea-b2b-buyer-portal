@@ -7,6 +7,7 @@ import { LineItem, StorefrontAPILineItem } from './b3Product/b3Product';
 import { EcoTaxCustomFieldProductResponse, getEcoTaxCustomFieldValues, getEcoTaxItemName } from '@/shared/service/bc/graphql/ecotax';
 import { snackbar } from '@/utils/b3Tip';
 import { getStorefrontAPIUrl } from '@/shared/service/request/base';
+import { storeHash } from '@/utils/basicConfig';
 
 const handleSplitOptionId = (id: string | number) => {
   if (typeof id === 'string' && id.includes('attribute')) {
@@ -151,7 +152,7 @@ const createNewShoppingCartCustom = async (productData: StorefrontAPILineItem[],
     line_items: productData
   };
   
-  const res = await fetch(getStorefrontAPIUrl() + `/v3/carts/${cartId}/items`, {
+  const res = await fetch(getStorefrontAPIUrl(window.location.hostname) + `/v3/carts/${cartId}/items`, {
       method: 'POST',
       credentials: 'same-origin',
       headers: {
@@ -174,8 +175,8 @@ export const updateCartCustom = async (cartInfo: any, productData: StorefrontAPI
   const reqBody = {
     line_items: productData
   };
-
-  return fetch(getStorefrontAPIUrl() + `/v3/carts/${cartId}/items`, {
+  
+  return fetch(getStorefrontAPIUrl(window.location.hostname) + `/v3/carts/${cartId}/items`, {
       method: 'POST',
       credentials: 'same-origin',
       headers: {

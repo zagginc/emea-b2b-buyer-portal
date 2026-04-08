@@ -47,8 +47,15 @@ export function getAppClientId(environment?: Environment) {
   return ENVIRONMENT_B2B_APP_CLIENT_ID[getEnvironment(environment)];
 }
 
-export function getStorefrontAPIUrl() {
-  return 'https://zagg-bc-middleware-394613050955.europe-west2.run.app';
+export function getStorefrontAPIUrl(currentUrl: string) {
+  // JC Sandbox test middleware
+  // return 'https://zagg-bc-middleware-394613050955.europe-west2.run.app';
+
+  if (currentUrl === 'eub2b.zagg.com' || currentUrl === 'store-q8gaq88nct.mybigcommerce.com') {
+      return 'https://ost.bcapps.zagg.com/q8gaq88nct';
+  } else {
+      return 'https://staging-ost.bcapps.zagg.com/acndk3b6xi';
+  }
 }
 
 enum RequestType {
