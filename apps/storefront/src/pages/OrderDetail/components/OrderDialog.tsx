@@ -392,7 +392,7 @@ export default function OrderDialog({
   const handleReorder = async () => {
     const items = editableProducts.filter((product) => checkedArr.includes(product.variant_id));
     const invalidProducts = [];
-    
+
     // Check quantities match pack size
     items.forEach(product => {
       if (product.packSize && !isQuantityPackCompliant(Number(product.editQuantity), product.packSize)) {
@@ -435,6 +435,22 @@ export default function OrderDialog({
       if (checkedArr.length === 0) {
         return;
       }
+          
+      const items = editableProducts.filter((product) => checkedArr.includes(product.variant_id));
+      const invalidProducts = [];
+
+      // Check quantities match pack size
+      items.forEach(product => {
+        if (product.packSize && !isQuantityPackCompliant(Number(product.editQuantity), product.packSize)) {
+          snackbar.error(b3Lang("global.packSizeErrorProductName", { productName: product.name, packSize: product.packSize }));
+          invalidProducts.push(product);
+        };
+      });
+
+      if (invalidProducts.length) {
+        return;
+      };
+      
       handleClose();
       setOpenShoppingList(true);
     }
