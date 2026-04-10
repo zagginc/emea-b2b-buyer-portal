@@ -17,6 +17,7 @@ import {
   ProductImage,
   ProductOptionText,
 } from '../styled';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ReturnListProps {
   returnId: number;
@@ -44,7 +45,7 @@ export default function OrderCheckboxProduct(props: OrderCheckboxProductProps) {
     textAlign = 'left',
     type,
   } = props;
-
+  
   const b3Lang = useB3Lang();
 
   const [isMobile] = useMobile();
@@ -134,7 +135,7 @@ export default function OrderCheckboxProduct(props: OrderCheckboxProductProps) {
 
   const handleNumberInputBlur = (product: EditableProductItem) => () => {
     const editableProduct = product;
-    if (!product.editQuantity || Number(product.editQuantity) === 0) {
+   if (!product.editQuantity || Number(product.editQuantity) === 0) {
       editableProduct.editQuantity = '1';
       onProductChange([...products]);
     }
@@ -183,7 +184,6 @@ export default function OrderCheckboxProduct(props: OrderCheckboxProductProps) {
           }}
         />
       )}
-
       {products.map((product: EditableProductItem) => (
         <Flex
           isMobile={isMobile}
@@ -241,6 +241,7 @@ export default function OrderCheckboxProduct(props: OrderCheckboxProductProps) {
               }}
               error={!!product.helperText}
               helperText={product.helperText}
+              inputProps={{step: product.packSize ?? 1}}
             />
           </FlexItem>
           <FlexItem textAlignLocation={textAlign} padding="10px 0 0" {...itemStyle.default}>

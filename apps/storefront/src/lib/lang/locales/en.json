@@ -125,6 +125,8 @@
   "global.B2BAutoCompleteCheckbox.input.label": "Company",
   "global.B2BSwitchCompanyModal.title": "Switch company",
   "global.B2BSwitchCompanyModal.confirm.button": "Switch company",
+  "global.packSizeError": "Must be ordered in packs of {packSize}",
+  "global.packSizeErrorProductName": "{productName} must be ordered in packs of {packSize}",
   "dashboard.company": "Company",
   "dashboard.admin": "Admin",
   "dashboard.email": "Email",

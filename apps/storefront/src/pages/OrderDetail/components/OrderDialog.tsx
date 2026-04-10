@@ -30,6 +30,7 @@ import getReturnFormFields from '../shared/config';
 import CreateShoppingList from './CreateShoppingList';
 import OrderCheckboxProduct from './OrderCheckboxProduct';
 import OrderShoppingList from './OrderShoppingList';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ReturnListProps {
   returnId: number;
@@ -389,6 +390,21 @@ export default function OrderDialog({
   };
 
   const handleReorder = async () => {
+    const items = editableProducts.filter((product) => checkedArr.includes(product.variant_id));
+    const invalidProducts = [];
+    
+    // Check quantities match pack size
+    items.forEach(product => {
+      if (product.packSize && !isQuantityPackCompliant(Number(product.editQuantity), product.packSize)) {
+        snackbar.error(b3Lang("global.packSizeErrorProductName", { productName: product.name, packSize: product.packSize }));
+        invalidProducts.push(product);
+      };
+    });
+
+    if (invalidProducts.length) {
+      return;
+    };
+
     try {
       setIsRequestLoading(true);
 

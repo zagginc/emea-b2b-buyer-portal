@@ -30,6 +30,7 @@ import { OrderHistory } from './components/OrderHistory';
 import { OrderShipping } from './components/OrderShipping';
 import { OrderDetailsContext, OrderDetailsProvider } from './context/OrderDetailsContext';
 import convertB2BOrderDetails from './shared/B2BOrderData';
+import { getPackSizeData, PackSizeData } from '@/shared/service/bc/graphql/packSizing';
 
 interface LocationState {
   isCompanyOrder: boolean;
@@ -115,10 +116,23 @@ function OrderDetail() {
 
           if (order) {
             const { products, companyInfo } = order;
+            const packSizeData: PackSizeData[] = await getPackSizeData(products.map(product => product.product_id));
+
+            const _products = products.map(product => {
+              const packData = packSizeData.find(data => data.id === product.product_id);
+              if (packData?.packSize) {
+                return {
+                  ...product,
+                  packSize: packData.packSize
+                }
+              } else {
+                return product;
+              }
+            });
 
             const newOrder = {
               ...order,
-              products: products.map((item: OrderProductItem) => {
+              products: _products.map((item: OrderProductItem) => {
                 return {
                   ...item,
                   imageUrl: item?.variantImageUrl || item.imageUrl,
