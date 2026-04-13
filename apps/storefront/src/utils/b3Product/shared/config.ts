@@ -12,6 +12,7 @@ import {
 } from '@/types';
 import { AllOptionProps, ALlOptionValue, Product } from '@/types/products';
 import b2bLogger from '@/utils/b3Logger';
+import { getPackSizeData } from '@/shared/service/bc/graphql/packSizing';
 
 export interface ShoppingListInfoProps {
   name: string;
@@ -64,6 +65,7 @@ interface ProductInfoProps {
   baseAllPriceTax?: number | string;
   currentProductPrices?: BcCalculatedPrice;
   extraProductPrices?: BcCalculatedPrice[];
+  packSize?: number;
   [key: string]: any;
 }
 
@@ -414,8 +416,8 @@ export const getAllModifierDefaultValue = (modifiers: CustomFieldItems) => {
   return modifierDefaultValue;
 };
 
-export const conversionProductsList = (products: Product[], listProduct: ListItemProps[] = []) =>
-  products.map((product) => {
+export const conversionProductsList = (products: Product[], listProduct: ListItemProps[] = []) => 
+  products.map((product) => {    
     const optionsV3 = product.optionsV3 || [];
     const modifiers = product.modifiers || [];
     const variants = product.variants || [];
@@ -446,6 +448,45 @@ export const conversionProductsList = (products: Product[], listProduct: ListIte
       allOptions: [...variantOptions, ...modifiers],
     };
   });
+
+export const conversionProductsListCustom = async (products: Product[], listProduct: ListItemProps[] = []) => {
+  const productIds = products.map(data => data.id);
+  const packData = await getPackSizeData(productIds);
+
+  return products.map((product) => {    
+    const optionsV3 = product.optionsV3 || [];
+    const modifiers = product.modifiers || [];
+    const variants = product.variants || [];
+    const packSizeData = packData.find(data => data.id === product.id);
+
+    const variantOptions = optionsV3.map((option) => ({
+      ...option,
+      required: true,
+      isVariantOption: true,
+    }));
+
+    let price = variants[0]?.calculated_price || 0;
+    variants.forEach((variant) => {
+      price = Math.min(variant.calculated_price || 0, price);
+    });
+
+    const selectOptions =
+      listProduct.find((item) => item.node.productId === product.id)?.node.optionList || '[]';
+
+    return {
+      ...product,
+      quantity: 1,
+      base_price: `${price}`,
+      optionsV3,
+      options: product.options || [],
+      variants,
+      modifiers,
+      selectOptions,
+      allOptions: [...variantOptions, ...modifiers],
+      packSize: packSizeData?.packSize
+    };
+  });
+}
 
 export const getOptionRequestData = (
   formFields: CustomFieldItems[],

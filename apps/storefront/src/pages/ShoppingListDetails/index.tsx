@@ -41,6 +41,7 @@ import {
 import {
   addLineItems,
   conversionProductsList,
+  conversionProductsListCustom,
   CustomerInfoProps,
   ListItemProps,
   ProductsProps,
@@ -129,7 +130,7 @@ function useData() {
     const options = { productIds, currencyCode, companyId, customerGroupId };
     const { productsSearch } = await searchProducts(options);
 
-    return conversionProductsList(productsSearch);
+    return conversionProductsListCustom(productsSearch);
   };
 
   const getShoppingList = (params: SearchProps) => {
@@ -331,7 +332,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
         });
 
         const newProductsSearch = await getProducts(productIds);
-
+        
         listProducts.forEach((item) => {
           const { node } = item;
 
@@ -344,6 +345,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
           node.productsSearch = productInfo || {};
           node.productName = productInfo?.name || node.productName;
           node.productUrl = productInfo?.productUrl || node.productUrl;
+          node.packSize = productInfo?.packSize;
 
           node.disableCurrentCheckbox = false;
           if (node.quantity === 0) {
@@ -386,7 +388,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     return {
       edges: listProducts,
       totalCount,
-    };
+    };    
   };
 
   const handleUpdateShoppingList = async (status: number) => {
@@ -654,7 +656,8 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
         customerGroupId,
       });
 
-      const newProductInfo: CustomFieldItems = conversionProductsList(productsSearch);
+      const newProductInfo: CustomFieldItems = await conversionProductsList(productsSearch);
+      
       let errorMessage = '';
       let isFoundVariant = true;
 

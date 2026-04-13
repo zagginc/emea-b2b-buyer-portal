@@ -35,6 +35,7 @@ import B3FilterSearch from '../../../components/filter/B3FilterSearch';
 import ChooseOptionsDialog from './ChooseOptionsDialog';
 import ShoppingDetailAddNotes from './ShoppingDetailAddNotes';
 import ShoppingDetailCard from './ShoppingDetailCard';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ListItem {
   [key: string]: string;
@@ -198,8 +199,12 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
 
   const [handleSetOrderBy, order, orderBy] = useSort(sortKeys, defaultSortKey, search, setSearch);
 
-  const handleUpdateProductQty = (id: number | string, value: number | string) => {
+  const handleUpdateProductQty = (row: CustomFieldItems, value: number | string) => {    
     if (Number(value) < 0) return;
+
+    const id = row.id;
+    const packSize = row.packSize;
+    
     const currentItem = originProducts.find((item: ListItemProps) => {
       const { node } = item;
 
@@ -213,17 +218,24 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
     const newListItems = listItems?.map((item: ListItemProps) => {
       const { node } = item;
       if (node?.id === id) {
+        let disableCheckbox = false;
+
+        if (Number(value) === 0 || !isQuantityPackCompliant(Number(value), packSize)) {
+          disableCheckbox = true;
+        };
+
         node.quantity = `${Number(value)}`;
-        node.disableCurrentCheckbox = Number(value) === 0;
+        node.disableCurrentCheckbox = disableCheckbox;
       }
 
       return item;
     });
 
-    const nonNumberProducts = newListItems.filter(
-      (item: ListItemProps) => Number(item.node.quantity) === 0,
+    const disableCheckboxProducts = newListItems.filter(
+      (item: ListItemProps) => item.node.disableCurrentCheckbox === true,
     );
-    setDisabledSelectAll(nonNumberProducts.length === newListItems.length);
+
+    setDisabledSelectAll(disableCheckboxProducts.length > 0);
     paginationTableRef.current?.setList([...newListItems]);
   };
 
@@ -325,8 +337,21 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
     await updateShoppingListItem(data);
   };
 
-  const handleUpdateShoppingListItemQty = async (itemId: number | string) => {
+  const handleUpdateShoppingListItemQty = async (row: CustomFieldItems) => {    
     if (qtyNotChangeFlag) return;
+    const itemId = row.itemId;
+    const listItems: ListItemProps[] = paginationTableRef.current?.getList() || [];
+    const currentItem = listItems.find((item: ListItemProps) => {
+      const { node } = item;
+
+      return node.itemId === itemId;
+    });
+
+    if (row.packSize && !isQuantityPackCompliant(Number(currentItem?.node.quantity), row.packSize)) {
+      snackbar.error(b3Lang('global.packSizeErrorProductName', { productName: currentItem?.node.productName ?? '', packSize: row.packSize }));
+      return;
+    };
+
     setIsRequestLoading(true);
     try {
       await handleUpdateShoppingListItem(itemId);
@@ -553,12 +578,13 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
           inputProps={{
             inputMode: 'numeric',
             pattern: '[0-9]*',
+            step: row.packSize ?? 1
           }}
           onChange={(e) => {
-            handleUpdateProductQty(row.id, e.target.value);
+            handleUpdateProductQty(row, e.target.value);
           }}
           onBlur={() => {
-            handleUpdateShoppingListItemQty(row.itemId);
+            handleUpdateShoppingListItemQty(row);
           }}
         />
       ),
@@ -766,25 +792,25 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
         orderBy={orderBy}
         sortByFn={handleSetOrderBy}
         pageType="shoppingListDetailsTable"
-        renderItem={(row, index, checkBox) => (
-          <ShoppingDetailCard
-            len={shoppingListInfo?.products?.edges.length || 0}
-            item={row}
-            itemIndex={index}
-            showPrice={showPrice}
-            onEdit={handleOpenProductEdit}
-            onDelete={setDeleteItemId}
-            checkBox={checkBox}
-            setDeleteOpen={setDeleteOpen}
-            setAddNoteOpen={setAddNoteOpen}
-            setAddNoteItemId={setAddNoteItemId}
-            setNotes={setNotes}
-            handleUpdateProductQty={handleUpdateProductQty}
-            handleUpdateShoppingListItem={handleUpdateShoppingListItemQty}
-            isReadForApprove={isReadForApprove || isJuniorApprove}
-            b2bAndBcShoppingListActionsPermissions={b2bAndBcShoppingListActionsPermissions}
-          />
-        )}
+        // renderItem={(row, index, checkBox) => (
+        //   <ShoppingDetailCard
+        //     len={shoppingListInfo?.products?.edges.length || 0}
+        //     item={row}
+        //     itemIndex={index}
+        //     showPrice={showPrice}
+        //     onEdit={handleOpenProductEdit}
+        //     onDelete={setDeleteItemId}
+        //     checkBox={checkBox}
+        //     setDeleteOpen={setDeleteOpen}
+        //     setAddNoteOpen={setAddNoteOpen}
+        //     setAddNoteItemId={setAddNoteItemId}
+        //     setNotes={setNotes}
+        //     handleUpdateProductQty={handleUpdateProductQty}
+        //     handleUpdateShoppingListItem={handleUpdateShoppingListItemQty}
+        //     isReadForApprove={isReadForApprove || isJuniorApprove}
+        //     b2bAndBcShoppingListActionsPermissions={b2bAndBcShoppingListActionsPermissions}
+        //   />
+        // )}
       />
 
       <ChooseOptionsDialog

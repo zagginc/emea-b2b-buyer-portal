@@ -54,7 +54,9 @@ export const getPackSizeData = async (productIds: number[]): Promise<PackSizeDat
   }
 };
 
-export const isQuantityPackCompliant = (quantity: number, packSize: number) => {
+export const isQuantityPackCompliant = (quantity: number, packSize?: number) => {
+  if (!packSize) return true;
+  
   return quantity % packSize === 0 ? true : false;
 }
 
