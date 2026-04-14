@@ -12,6 +12,7 @@ import { getDisplayPrice, judgmentBuyerProduct } from '@/utils/b3Product/b3Produ
 
 import { MoneyFormat, ProductItem } from '../types';
 import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface FlexProps {
   isHeader?: boolean;
@@ -166,7 +167,7 @@ export function B3ProductList<T>(props: ProductProps<T>) {
     }
   };
 
-  const handleNumberInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleNumberInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {    
     if (['KeyE', 'Equal', 'Minus'].indexOf(event.code) > -1) {
       event.preventDefault();
     }
@@ -174,7 +175,11 @@ export function B3ProductList<T>(props: ProductProps<T>) {
 
   const handleNumberInputBlur = (product: CustomFieldItems) => () => {
     if (!product[quantityKey]) {
-      onProductQuantityChange(product.id, 1);
+      if (product.packSize) {
+        onProductQuantityChange(product.id, product.packSize);
+      } else {
+        onProductQuantityChange(product.id, 1);
+      }
     }
 
     if (Number(product[quantityKey]) > 1000000) {
@@ -237,6 +242,15 @@ export function B3ProductList<T>(props: ProductProps<T>) {
 
     return newMoney;
   };
+
+  useEffect(() => {
+    // If initial quantity isn't pack compliant, switch quantity to pack size
+    products.forEach(product => {
+      if (product.packSize && !isQuantityPackCompliant(getQuantity(product) || 1, product.packSize)) {
+        onProductQuantityChange(product.id, product.packSize);
+      };
+    });
+  }, [products]);
 
   return products.length > 0 ? (
     <Box>
@@ -479,6 +493,9 @@ export function B3ProductList<T>(props: ProductProps<T>) {
                   }}
                   error={!!product.helperText}
                   helperText={product.helperText}
+                  inputProps={{
+                    step: product.packSize ?? 1
+                  }}
                 />
               ) : (
                 <>
