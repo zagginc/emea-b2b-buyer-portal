@@ -37,6 +37,7 @@ import {
   getOptionRequestData,
   getProductOptionsFields,
 } from '../../../utils/b3Product/shared/config';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 const Flex = styled('div')({
   display: 'flex',
@@ -497,6 +498,11 @@ export default function ChooseOptionsDialog(props: ChooseOptionsDialogProps) {
   }, [chooseOptionsProduct]);
 
   const handleConfirmClicked = () => {
+    if (product?.packSize && !isQuantityPackCompliant(Number(quantity), product.packSize)) {
+      snackbar.error(b3Lang('global.packSizeErrorProductName', { productName: product.name ?? '', packSize: product.packSize }));
+      return;
+    };
+
     handleSubmit((value) => {
       const optionList = getOptionList(value);
 
@@ -597,6 +603,9 @@ export default function ChooseOptionsDialog(props: ChooseOptionsDialogProps) {
                       sx={{
                         width: '60%',
                         maxWidth: '100px',
+                      }}
+                      inputProps={{
+                        step: product.packSize ?? 1
                       }}
                     />
                   </FlexItem>
