@@ -14,6 +14,7 @@ import { getAllModifierDefaultValue, getQuickAddRowFields } from '@/utils/b3Prod
 import { snackbar } from '@/utils/b3Tip';
 
 import { ShoppingListAddProductOption, SimpleObject } from '../../../types';
+import { getPackSizeData, isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface AddToListContentProps {
   updateList: () => void;
@@ -21,6 +22,11 @@ interface AddToListContentProps {
   buttonText?: string;
   buttonLoading?: boolean;
   type: 'shoppingList' | 'quoteDraft';
+}
+
+interface SkuArrayEntry {
+  sku: string;
+  packSize: number;
 }
 
 const rowStepSize = 3;
@@ -115,7 +121,7 @@ export default function QuickAdd(props: AddToListContentProps) {
     loopRows(rows, (index) => {
       const sku = value[`sku-${index}`];
       const qty = value[`qty-${index}`];
-
+      
       isValid = validateSkuInput(index, sku, qty) === false ? false : isValid;
 
       if (isValid && sku) {
@@ -139,6 +145,7 @@ export default function QuickAdd(props: AddToListContentProps) {
       const passSku: string[] = [];
       const notAddAble: string[] = [];
       const numberLimit: string[] = [];
+      const notPackCompliant: SkuArrayEntry[] = [];
 
       skus.forEach((sku) => {
         const variantInfo: CustomFieldItems | null = (variantInfoList || []).find(
@@ -157,6 +164,7 @@ export default function QuickAdd(props: AddToListContentProps) {
           purchasingDisabled = '1',
           modifiers,
           variantSku,
+          packSize
         } = variantInfo;
         const defaultModifiers = getAllModifierDefaultValue(modifiers);
 
@@ -166,6 +174,14 @@ export default function QuickAdd(props: AddToListContentProps) {
           notPurchaseSku.push(sku);
           return;
         }
+
+        if (packSize && !isQuantityPackCompliant(quantity, packSize)) {
+          notPackCompliant.push({
+            sku: sku,
+            packSize: packSize
+          });
+          return;
+        };
 
         const notPassedModifier = defaultModifiers.filter(
           (modifier: CustomFieldItems) => !modifier.isVerified,
@@ -253,6 +269,7 @@ export default function QuickAdd(props: AddToListContentProps) {
         passSku,
         notAddAble,
         numberLimit,
+        notPackCompliant
       };
     },
     [allowAddNonPurchasableProduct, draftQuoteList, type],
@@ -290,8 +307,22 @@ export default function QuickAdd(props: AddToListContentProps) {
   const getVariantList = async (skus: string[]) => {
     try {
       const { variantSku: variantInfoList } = await getVariantInfoBySkus(skus);
+      const productIds = variantInfoList.map((data: any) => Number(data.productId));
+      const packData = await getPackSizeData(productIds);
 
-      return variantInfoList;
+      const _variantInfoList = variantInfoList.map((variantInfo: any) => {
+        const packInfo = packData.find(data => Number(variantInfo.productId) === data.id);
+        if (packInfo?.packSize) {
+          return {
+            ...variantInfo,
+            packSize: packInfo.packSize
+          }
+        };
+
+        return variantInfo;
+      });
+      
+      return _variantInfoList;
     } catch (error) {
       return [];
     }
@@ -315,8 +346,15 @@ export default function QuickAdd(props: AddToListContentProps) {
         }
 
         const variantInfoList = await getVariantList(skus);
-        const { notFoundSku, notPurchaseSku, productItems, notAddAble, passSku, numberLimit } =
-          getProductItems(variantInfoList, skuValue, skus);
+        const { 
+          notFoundSku, 
+          notPurchaseSku, 
+          productItems, 
+          notAddAble, 
+          passSku, 
+          numberLimit,
+          notPackCompliant
+        } = getProductItems(variantInfoList, skuValue, skus);
 
         if (notFoundSku.length > 0) {
           showErrors(value, notFoundSku, 'sku', '');
@@ -355,6 +393,20 @@ export default function QuickAdd(props: AddToListContentProps) {
               numberLimit: numberLimit.join(', '),
             }),
           );
+        }
+
+        if (notPackCompliant.length > 0) {
+          notPackCompliant.forEach((data) => {
+            showErrors(value, [data.sku], 'qty', '');
+          });
+          notPackCompliant.forEach(data => {
+            snackbar.error(
+              b3Lang("global.packSizeErrorProductName", { 
+                productName: data.sku, 
+                packSize: data.packSize 
+              }),
+            );
+          })
         }
 
         if (productItems.length > 0) {
