@@ -24,6 +24,8 @@ import B3Spin from '../spin/B3Spin';
 import B3UploadLoading from './B3UploadLoading';
 import BulkUploadTable from './BulkUploadTable';
 import { isFileExtension, parseEmptyData, ParseEmptyDataProps, removeEmptyRow } from './utils';
+import { getPackSizeData, isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
+import { useB3Lang } from '@/lib/lang';
 
 interface B3UploadProps {
   isOpen: boolean;
@@ -81,6 +83,8 @@ export function B3Upload(props: B3UploadProps) {
   const role = useAppSelector(({ company }) => company.customer.role);
 
   const theme = useTheme();
+
+  const b3Lang = useB3Lang();
 
   const primaryColor = theme.palette.primary.main;
 
@@ -148,10 +152,37 @@ export function B3Upload(props: B3UploadProps) {
       const productUpload = await BulkUploadCSV(params);
 
       if (productUpload) {
-        const { result } = productUpload;
-        const validProduct = result?.validProduct || [];
+        let { result } = productUpload;
+        let validProduct: any[] = [];
+        const validProductIds = result?.validProduct.map((product: any) => Number(product.products.productId));
+        const packData = await getPackSizeData(validProductIds);
 
-        setProductData(validProduct);
+        // Loop through products which passed server side validation
+        result.validProduct.forEach((product: any) => {
+          // Get pack size data for the products
+          const productPackInfo = packData.find(data => data.id === Number(product.products.productId));
+
+          if (productPackInfo?.packSize && !isQuantityPackCompliant(Number(product.qty), productPackInfo?.packSize)) {
+            // If quantity doesn't match up with pack size, add product to error products array
+            result.errorProduct.push({
+              sku: product.sku,
+              qty: product.qty,
+              row: product.row,
+              error: b3Lang("global.packSizeError", { packSize: productPackInfo.packSize })
+            });
+          } else {
+            // If product is pack compliant, add to valid product array
+            validProduct.push(product);
+          };
+        });
+        
+        // Assign new valid product array to result object
+        result.validProduct = validProduct;
+
+        // Sort error product array by row number
+        result.errorProduct = result.errorProduct.sort((a: any, b: any) => Number(a.row) - Number(b.row))
+
+        setProductData(result.validProduct);
         setFileDatas(result);
         setStep('end');
       }

@@ -166,13 +166,14 @@ function Row<Row>({
         sx={clickableRowStyles}
         data-testid="tableBody-Row"
       >
-        {showCheckbox && selectedSymbol && (
+
           <TableCell
             key={`showItemCheckbox-${node.id}`}
             sx={{
               borderBottom: showBorder ? '1px solid rgba(224, 224, 224, 1)' : lastItemBorderBottom,
             }}
           >
+            {showCheckbox && selectedSymbol && (
             <Checkbox
               // @ts-expect-error typed previously as an any
               checked={selectCheckbox.includes(node[selectedSymbol])}
@@ -182,8 +183,8 @@ function Row<Row>({
               }}
               disabled={applyAllDisableCheckbox ? isCheckboxDisabled : disableCurrentCheckbox}
             />
+              )}
           </TableCell>
-        )}
 
         {CollapseComponent && (
           <TableCell>

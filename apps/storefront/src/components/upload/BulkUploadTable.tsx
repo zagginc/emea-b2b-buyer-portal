@@ -273,7 +273,7 @@ function BulkUploadTable(props: BulkUploadTableProps) {
           />
         </StyledTableContainer>
 
-        {activeTab === 'error' && (
+        {/* {activeTab === 'error' && (
           <Box
             sx={{
               padding: isMobile ? '18px 0' : '0 16px 18px 16px',
@@ -283,7 +283,7 @@ function BulkUploadTable(props: BulkUploadTableProps) {
               {b3Lang('global.B3Upload.downloadErrorResults')}
             </Link>
           </Box>
-        )}
+        )} */}
       </Box>
     </Box>
   );
