@@ -403,7 +403,7 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
 
   useEffect(() => {
     if (shoppingListInfo) {
-      const {
+      let {
         products: { edges },
         grandTotal,
         totalTax,
@@ -420,7 +420,13 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
 
         return false;
       });
-
+      
+      edges.forEach((item: CustomFieldItems) => {
+        if (item.node.packSize && !isQuantityPackCompliant(item.node.quantity, item.node.packSize)) {
+          item.node.disableCurrentCheckbox = true;
+        };
+      });
+      
       setPriceHidden(isPriceHidden);
       setOriginProducts(cloneDeep(edges));
       setShoppingListTotalPrice(NewShoppingListTotalPrice);
@@ -433,7 +439,9 @@ function ShoppingDetailTable(props: ShoppingDetailTableProps, ref: Ref<unknown>)
         products: { edges },
       } = shoppingListInfo;
       const nonNumberProducts = edges.filter((item: ListItemProps) => item.node.quantity === 0);
-      setDisabledSelectAll(nonNumberProducts.length === edges.length);
+      const disableCheckboxProducts = edges.filter((item: ListItemProps) => item.node.disableCurrentCheckbox);
+      
+      setDisabledSelectAll(nonNumberProducts.length === edges.length || disableCheckboxProducts.length > 0);
     }
   }, [shoppingListInfo]);
 
