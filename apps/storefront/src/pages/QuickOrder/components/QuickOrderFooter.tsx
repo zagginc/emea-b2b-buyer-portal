@@ -41,6 +41,7 @@ import {
 import CreateShoppingList from '../../OrderDetail/components/CreateShoppingList';
 import OrderShoppingList from '../../OrderDetail/components/OrderShoppingList';
 import { addCartProductToVerify, CheckedProduct } from '../utils';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface QuickOrderFooterProps {
   checkedArr: CheckedProduct[];
@@ -229,8 +230,12 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
   };
 
   const handleAddSelectedToCart = async () => {
-    setIsRequestLoading(true);
     handleClose();
+    
+    const packSizeValidation = areQuantitiesPackCompliant(checkedArr);
+    if (!packSizeValidation) return;
+    
+    setIsRequestLoading(true);
 
     if (isBackorderEnabled) {
       handleBackendAddSelectedToCart();
@@ -489,8 +494,35 @@ function QuickOrderFooter(props: QuickOrderFooterProps) {
     setOpenShoppingList(true);
   };
 
+  const areQuantitiesPackCompliant = (products: CheckedProduct[]) => {
+    const failedProducts: CheckedProduct[] = [];
+    products.forEach((product: CheckedProduct) => {
+      const {
+        node: { quantity, productsSearch },
+      } = product;
+
+      if (productsSearch?.packSize && !isQuantityPackCompliant(quantity, productsSearch.packSize)) {
+        failedProducts.push(product);
+      }; 
+    });
+
+    if (failedProducts.length) {
+      failedProducts.forEach((product: CheckedProduct) => {
+        snackbar.error(b3Lang("global.packSizeErrorProductName", { productName: product.node.productName, packSize: product?.node?.productsSearch?.packSize ?? '' }));
+      });
+
+      return false;
+    };
+
+    return true;
+  };
+
   const handleCreateShoppingClick = () => {
     handleClose();
+
+    const packSizeValidation = areQuantitiesPackCompliant(checkedArr);
+    if (!packSizeValidation) return;
+
     handleCloseShoppingClick();
     setOpenShoppingList(true);
   };

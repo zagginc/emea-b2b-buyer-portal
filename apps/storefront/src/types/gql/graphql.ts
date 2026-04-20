@@ -3002,6 +3002,7 @@ export type ProductInfoType = {
   taxClassId?: Maybe<Scalars['Int']['output']>;
   /** The all variants of product */
   variants?: Maybe<Array<Maybe<Scalars['GenericScalar']['output']>>>;
+  packSize?: number;
 };
 
 export type ProductInputType = {

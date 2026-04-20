@@ -17,7 +17,7 @@ import { displayFormat } from '@/utils/b3DateFormat';
 import { distanceDay } from '@/utils/b3Picker';
 import { getProductPriceIncTaxOrExTaxBySetting } from '@/utils/b3Price';
 import { getDisplayPrice } from '@/utils/b3Product/b3Product';
-import { conversionProductsList } from '@/utils/b3Product/shared/config';
+import { conversionProductsListCustom } from '@/utils/b3Product/shared/config';
 import { snackbar } from '@/utils/b3Tip';
 
 import B3FilterMore from '../../../components/filter/B3FilterMore';
@@ -27,6 +27,7 @@ import { CheckedProduct } from '../utils';
 
 import QuickOrderCard from './QuickOrderCard';
 import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ProductInfoProps {
   basePrice: number | string;
@@ -159,7 +160,7 @@ function QuickOrderTable({
           customerGroupId,
         });
 
-        const newProductsSearch = conversionProductsList(productsSearch);
+        const newProductsSearch = await conversionProductsListCustom(productsSearch);
 
         listProducts.forEach((item) => {
           const { node } = item;
@@ -169,7 +170,7 @@ function QuickOrderTable({
 
             return Number(node.productId) === Number(productId);
           });
-
+          
           node.productsSearch = productInfo || {};
         });
 
@@ -189,9 +190,9 @@ function QuickOrderTable({
     } = await getOrderedProducts(params);
 
     const listProducts = await handleGetProductsById(edges);
-
+    
     setTotalCount(totalCount);
-
+    
     return {
       edges: listProducts,
       totalCount,
@@ -429,6 +430,7 @@ function QuickOrderTable({
               inputProps={{
                 inputMode: 'numeric',
                 pattern: '[0-9]*',
+                step: row?.productsSearch?.packSize ?? 1
               }}
               onChange={(e) => {
                 handleUpdateProductQty(row.id, e.target.value);
@@ -573,13 +575,13 @@ function QuickOrderTable({
           sortDirection={order}
           orderBy={orderBy}
           sortByFn={handleSetOrderBy}
-          renderItem={(row, _, checkBox) => (
-            <QuickOrderCard
-              item={row}
-              checkBox={checkBox}
-              handleUpdateProductQty={handleUpdateProductQty}
-            />
-          )}
+          // renderItem={(row, _, checkBox) => (
+          //   <QuickOrderCard
+          //     item={row}
+          //     checkBox={checkBox}
+          //     handleUpdateProductQty={handleUpdateProductQty}
+          //   />
+          // )}
         />
       </StyleQuickOrderTable>
     </B3Spin>
