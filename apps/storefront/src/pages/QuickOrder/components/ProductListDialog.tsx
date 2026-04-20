@@ -12,6 +12,7 @@ import { ShoppingListDetailsContext } from '@/pages/ShoppingListDetails/context/
 import { useAppSelector } from '@/store';
 import { ShoppingListProductItem } from '@/types';
 import { snackbar } from '@/utils/b3Tip';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ProductTableActionProps {
   product: ShoppingListProductItem;
@@ -116,7 +117,10 @@ export default function ProductListDialog(props: ProductListDialogProps) {
       if (purchasingDisabled && !isEnableProduct) {
         snackbar.error(b3Lang('shoppingList.chooseOptionsDialog.productNoLongerForSale'));
         return false;
-      }
+      } else if (product.packSize && !isQuantityPackCompliant(parseInt(product.quantity.toString(), 10), product.packSize)) {
+        snackbar.error(b3Lang("global.packSizeErrorProductName", { productName: product.name, packSize: product.packSize }));
+        return false;
+      };
 
       return true;
     },

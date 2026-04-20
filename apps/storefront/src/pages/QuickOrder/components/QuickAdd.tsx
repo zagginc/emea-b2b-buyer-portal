@@ -27,6 +27,7 @@ import {
   parseOptionList,
 } from './QuickAdd.validation';
 import { formatOptionId, StorefrontAPILineItem } from '@/utils/b3Product/b3Product';
+import { getPackSizeData, isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 const INITIAL_NUM_ROWS = 3;
 
@@ -125,6 +126,10 @@ export default function QuickAdd() {
       min: number;
       max: number;
     }[] = [];
+    const notPackCompliant: {
+      sku: string;
+      packSize: number;
+    }[] = [];
 
     const cartProducts = await getCartProductInfo();
 
@@ -148,6 +153,7 @@ export default function QuickAdd() {
         maxQuantity,
         minQuantity,
         variantSku,
+        packSize
       } = variantInfo;
 
       const num =
@@ -165,6 +171,14 @@ export default function QuickAdd() {
         notPurchaseSku.push(sku);
         return;
       }
+
+      if (packSize && !isQuantityPackCompliant(quantity, packSize)) {
+        notPackCompliant.push({
+          sku: sku,
+          packSize: packSize
+        });
+        return;
+      };
 
       if (isStock === '1' && allQuantity > Number(stock)) {
         notStockSku.push({
@@ -210,6 +224,7 @@ export default function QuickAdd() {
       productItems,
       passSku,
       orderLimitSku,
+      notPackCompliant
     };
   };
 
@@ -246,7 +261,23 @@ export default function QuickAdd() {
     try {
       const { variantSku: variantInfoList } = await getVariantInfoBySkus(skus);
 
-      return variantInfoList;
+      const productIds = variantInfoList.map((data: any) => Number(data.productId));
+      const packData = await getPackSizeData(productIds);
+
+      const _variantInfoList = variantInfoList.map((variantInfo: any) => {
+        const packInfo = packData.find(data => Number(variantInfo.productId) === data.id);
+        if (packInfo?.packSize) {
+          return {
+            ...variantInfo,
+            packSize: packInfo.packSize
+          }
+        };
+ 
+        return variantInfo;
+      });
+
+      return _variantInfoList;
+
     } catch (error) {
       return [];
     }
@@ -258,7 +289,7 @@ export default function QuickAdd() {
     skuValue: SimpleObject,
     skus: string[],
   ) => {
-    const { notFoundSku, notPurchaseSku, productItems, passSku, notStockSku, orderLimitSku } =
+    const { notFoundSku, notPurchaseSku, productItems, passSku, notStockSku, orderLimitSku, notPackCompliant } =
       await getProductItems(variantInfoList, skuValue, skus);
 
     if (notFoundSku.length > 0) {
@@ -313,6 +344,20 @@ export default function QuickAdd() {
           }),
         );
       });
+    }
+
+    if (notPackCompliant.length > 0) {
+      notPackCompliant.forEach((data) => {
+        showErrors(value, [data.sku], 'qty', '');
+      });
+      notPackCompliant.forEach(data => {
+        snackbar.error(
+          b3Lang("global.packSizeErrorProductName", { 
+            productName: data.sku, 
+            packSize: data.packSize 
+          }),
+        );
+      })
     }
 
     return { productItems, passSku };

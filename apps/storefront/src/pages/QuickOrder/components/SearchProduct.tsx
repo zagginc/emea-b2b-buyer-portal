@@ -9,7 +9,7 @@ import { useB3Lang } from '@/lib/lang';
 import { searchProducts } from '@/shared/service/b2b';
 import { useAppSelector } from '@/store';
 import { calculateProductListPrice } from '@/utils/b3Product/b3Product';
-import { conversionProductsList } from '@/utils/b3Product/shared/config';
+import { conversionProductsList, conversionProductsListCustom } from '@/utils/b3Product/shared/config';
 import { snackbar } from '@/utils/b3Tip';
 
 import { ShoppingListProductItem } from '../../../types';
@@ -62,7 +62,7 @@ export default function SearchProduct({ addToList }: SearchProductProps) {
         categoryFilter: true,
       });
 
-      const product = conversionProductsList(productsSearch);
+      const product = await conversionProductsListCustom(productsSearch);
 
       setProductList(product);
       setProductListOpen(true);
