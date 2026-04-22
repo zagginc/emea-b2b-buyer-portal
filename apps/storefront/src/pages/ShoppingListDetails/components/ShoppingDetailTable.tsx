@@ -34,7 +34,6 @@ import B3FilterSearch from '../../../components/filter/B3FilterSearch';
 
 import ChooseOptionsDialog from './ChooseOptionsDialog';
 import ShoppingDetailAddNotes from './ShoppingDetailAddNotes';
-import ShoppingDetailCard from './ShoppingDetailCard';
 import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ListItem {

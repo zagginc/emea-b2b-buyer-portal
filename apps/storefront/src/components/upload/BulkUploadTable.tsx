@@ -1,12 +1,11 @@
 import { useRef, useState } from 'react';
 import { InsertDriveFile, MoreHoriz } from '@mui/icons-material';
-import { Box, Button, Link, Menu, MenuItem, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Button, Menu, MenuItem, Tab, Tabs, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 import { B3PaginationTable, GetRequestList } from '@/components/table/B3PaginationTable';
 import { TableColumnItem } from '@/components/table/B3Table';
 import { useMobile } from '@/hooks/useMobile';
-import { useB3Lang } from '@/lib/lang';
 
 import BulkUploadTableCard from './BulkUploadTableCard';
 
@@ -37,7 +36,6 @@ const StyledTableContainer = styled(Box)(() => {
 function BulkUploadTable(props: BulkUploadTableProps) {
   const { setStep, fileDatas, fileName } = props;
   const [isMobile] = useMobile();
-  const b3Lang = useB3Lang();
 
   const columnErrorsItems: TableColumnItem<ListItem>[] = [
     {

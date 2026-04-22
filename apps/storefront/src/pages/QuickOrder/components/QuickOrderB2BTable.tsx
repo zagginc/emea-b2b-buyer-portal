@@ -25,9 +25,7 @@ import B3FilterPicker from '../../../components/filter/B3FilterPicker';
 import B3FilterSearch from '../../../components/filter/B3FilterSearch';
 import { CheckedProduct } from '../utils';
 
-import QuickOrderCard from './QuickOrderCard';
 import { isEcoTaxProduct } from '@/shared/service/bc/graphql/ecotax';
-import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ProductInfoProps {
   basePrice: number | string;

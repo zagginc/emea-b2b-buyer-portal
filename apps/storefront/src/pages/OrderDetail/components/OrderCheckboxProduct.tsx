@@ -17,7 +17,6 @@ import {
   ProductImage,
   ProductOptionText,
 } from '../styled';
-import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 interface ReturnListProps {
   returnId: number;
