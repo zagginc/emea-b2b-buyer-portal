@@ -4,6 +4,7 @@ import { styled } from '@mui/material/styles';
 
 import { useMobile } from '@/hooks/useMobile';
 import { useB3Lang } from '@/lib/lang';
+import { isQuantityPackCompliant } from '@/shared/service/bc/graphql/packSizing';
 
 const StyledNumberNoTopTextField = styled(TextField)(() => ({
   '& input': {
@@ -18,6 +19,7 @@ interface B3NumberTextFieldProps {
   isStock?: string;
   stock?: number;
   onChange: (value: number | string, isValid: boolean) => void;
+  step?: number;
 }
 
 export function B3QuantityTextField({
@@ -27,10 +29,11 @@ export function B3QuantityTextField({
   isStock = '0',
   stock = 0,
   onChange = () => {},
+  step = 1
 }: B3NumberTextFieldProps) {
   const b3Lang = useB3Lang();
   const [isMobile] = useMobile();
-
+  
   const sx = {
     width: isMobile ? '110px' : '72px',
     '& .MuiFormHelperText-root': {
@@ -47,6 +50,8 @@ export function B3QuantityTextField({
 
       if (isStock === '1' && stock === 0) {
         validMessage = b3Lang('shoppingList.quantityTextField.outOfStock');
+      } else if (!isQuantityPackCompliant(quantity, step)) {
+        validMessage = b3Lang("global.packSizeError", { packSize: step });
       } else if (isStock === '1' && quantity > stock) {
         validMessage = b3Lang('shoppingList.quantityTextField.available', { stock });
       } else if (minQuantity !== 0 && quantity < minQuantity) {
@@ -88,8 +93,9 @@ export function B3QuantityTextField({
       helperText={validMessage}
       inputProps={{
         inputMode: 'numeric',
-        min: 1,
+        min: step,
         pattern: '[0-9]*',
+        step: step
       }}
       onChange={(e) => {
         handleChange(e.target.value);

@@ -166,8 +166,8 @@ export default function ReAddToCart({
 
   const [internalProducts, setInternalProducts] = useState<ProductsProps[]>([]);
 
-  useEffect(() => {
-    setInternalProducts(cloneDeep(products));
+  useEffect(() => {    
+    setInternalProducts(cloneDeep(products));    
   }, [products]);
 
   const handleUpdateProductQty = async (
@@ -418,6 +418,7 @@ export default function ReAddToCart({
                         onChange={(value, isValid) => {
                           handleUpdateProductQty(index, value, isValid);
                         }}
+                        step={productsSearch?.packSize ?? 1}
                       />
                     </FlexItem>
                     <FlexItem {...itemStyle.default} textAlignLocation={textAlign}>

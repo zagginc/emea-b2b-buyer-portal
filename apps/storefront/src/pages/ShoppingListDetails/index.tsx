@@ -560,7 +560,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     try {
       const errors = await partialAddToCart(products);
 
-      setSuccessProductsCount(products.length - errors.length);
+      setSuccessProductsCount(products.length - errors.length);      
       setValidateFailureProducts(
         mapToProductsFailedArray(
           errors.map((p) => ({
@@ -754,7 +754,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
       setIsRequestLoading(false);
     }
   };
-
+  
   const retryAddToCart = isBackorderEnabled ? retryAddToCartBackend : retryAddToCartFrontend;
 
   const shouldRedirectToCheckoutAfterAddToCart = () => {
@@ -805,7 +805,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
 
     const getInventoryInfos = await getVariantInfoBySkus(skus);
 
-    const { validateFailureArr, validateSuccessArr } = verifyInventory(
+    let { validateFailureArr, validateSuccessArr } = verifyInventory(
       checkedArr,
       getInventoryInfos?.variantSku || [],
     );
@@ -848,13 +848,13 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
       } else if (validateFailureArr.length === 0) {
         shouldRedirectToCheckoutAfterAddToCart();
       }
-    }
+    };
     
     setValidateFailureProducts(validateFailureArr);
     setSuccessProductsCount(validateSuccessArr.length);
   };
 
-  const handleAddToCartBackend = async () => {    
+  const handleAddToCartBackend = async () => {        
     // CUSTOM CODE
     const atcLineItems: StorefrontAPILineItem[] = checkedArr.map(product => {
       const selectedOptions = JSON.parse(product.node.optionList);
@@ -881,7 +881,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
       } else {
         const errors = await partialAddToCart(checkedArr);
 
-        setSuccessProductsCount(checkedArr.length - errors.length);
+        setSuccessProductsCount(checkedArr.length - errors.length);        
         setValidateFailureProducts(
           mapToProductsFailedArray(
             errors.map((p) => ({
@@ -898,7 +898,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
         b3TriggerCartNumber();
       }
     } catch (e: unknown) {
-      if (e instanceof Error) {
+      if (e instanceof Error) {        
         setValidateFailureProducts(
           mapToProductsFailedArray(checkedArr.map((product) => ({ product }))),
         );
@@ -909,7 +909,7 @@ function ShoppingListDetails({ setOpenPage }: PageProps) {
     }
   };
 
-  const addToCart = isBackorderEnabled ? handleAddToCartBackend : handleAddToCartOnFrontend;
+  const addToCart = !isBackorderEnabled ? handleAddToCartBackend : handleAddToCartOnFrontend;
 
   // Add selected product to cart
   const handleAddProductsToCart = async () => {
