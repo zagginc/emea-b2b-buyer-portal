@@ -54,7 +54,7 @@ export function getStorefrontAPIUrl(currentUrl: string) {
   if (currentUrl === 'eub2b.zagg.com' || currentUrl === 'store-q8gaq88nct.mybigcommerce.com') {
       return 'https://ost.bcapps.zagg.com/q8gaq88nct';
   } else {
-      return 'https://staging-ost.bcapps.zagg.com/acndk3b6xi';
+      return 'https://staging-be-ost.bcapps.zagg.com/api/public/acndk3b6xi';
   }
 }
 
