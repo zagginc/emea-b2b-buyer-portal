@@ -52,7 +52,7 @@ export function getStorefrontAPIUrl(currentUrl: string) {
   // return 'https://zagg-bc-middleware-394613050955.europe-west2.run.app';
 
   if (currentUrl === 'eub2b.zagg.com' || currentUrl === 'store-q8gaq88nct.mybigcommerce.com') {
-      return 'https://ost.bcapps.zagg.com/q8gaq88nct';
+      return 'https://be-ost.bcapps.zagg.com/api/public/q8gaq88nct';
   } else {
       return 'https://staging-be-ost.bcapps.zagg.com/api/public/acndk3b6xi';
   }
